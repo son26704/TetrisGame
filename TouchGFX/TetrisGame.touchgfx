@@ -1,0 +1,592 @@
+{
+  "Application": {
+    "Screens": [
+      {
+        "Name": "Screen1",
+        "Components": [
+          {
+            "Type": "Box",
+            "Name": "gameBoard",
+            "X": 60,
+            "Y": 40,
+            "Width": 120,
+            "Height": 240,
+            "Color": {
+              "Red": 128,
+              "Green": 128,
+              "Blue": 128
+            }
+          },
+          {
+            "Type": "Container",
+            "Name": "TetrominoContainerJ",
+            "X": 84,
+            "Y": 88,
+            "Width": 48,
+            "Height": 48,
+            "Components": [
+              {
+                "Type": "Box",
+                "Name": "box4_6",
+                "Y": 24,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Blue": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box3_6",
+                "X": 12,
+                "Y": 24,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Blue": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box2_6",
+                "X": 12,
+                "Y": 12,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Blue": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box1_6",
+                "X": 12,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Blue": 255
+                }
+              }
+            ]
+          },
+          {
+            "Type": "Container",
+            "Name": "TetrominoContainerL",
+            "X": 60,
+            "Y": 88,
+            "Width": 48,
+            "Height": 48,
+            "Components": [
+              {
+                "Type": "Box",
+                "Name": "box4_5",
+                "X": 12,
+                "Y": 24,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Red": 255,
+                  "Green": 165
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box3_5",
+                "Y": 24,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Red": 255,
+                  "Green": 165
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box2_5",
+                "Y": 12,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Red": 255,
+                  "Green": 165
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box1_5",
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Red": 255,
+                  "Green": 165
+                }
+              }
+            ]
+          },
+          {
+            "Type": "Container",
+            "Name": "TetrominoContainerZ",
+            "X": 108,
+            "Y": 100,
+            "Width": 48,
+            "Height": 48,
+            "Components": [
+              {
+                "Type": "Box",
+                "Name": "box4_4",
+                "X": 24,
+                "Y": 12,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Red": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box3_4",
+                "X": 12,
+                "Y": 12,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Red": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box2_4",
+                "X": 12,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Red": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box1_4",
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Red": 255
+                }
+              }
+            ]
+          },
+          {
+            "Type": "Container",
+            "Name": "TetrominoContainerS",
+            "X": 132,
+            "Y": 40,
+            "Width": 48,
+            "Height": 48,
+            "Components": [
+              {
+                "Type": "Box",
+                "Name": "box4_3",
+                "X": 12,
+                "Y": 12,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Green": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box3_3",
+                "Y": 12,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Green": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box2_3",
+                "X": 24,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Green": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box1_3",
+                "X": 12,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Green": 255
+                }
+              }
+            ]
+          },
+          {
+            "Type": "Container",
+            "Name": "TetrominoContainerT",
+            "X": 96,
+            "Y": 40,
+            "Width": 48,
+            "Height": 48,
+            "Components": [
+              {
+                "Type": "Box",
+                "Name": "box4_2",
+                "X": 12,
+                "Y": 12,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Red": 128,
+                  "Blue": 128
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box3_2",
+                "X": 24,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Red": 128,
+                  "Blue": 128
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box2_2",
+                "X": 12,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Red": 128,
+                  "Blue": 128
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box1_2",
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Red": 128,
+                  "Blue": 128
+                }
+              }
+            ]
+          },
+          {
+            "Type": "Container",
+            "Name": "TetrominoContainerO",
+            "X": 72,
+            "Y": 40,
+            "Width": 48,
+            "Height": 48,
+            "Components": [
+              {
+                "Type": "Box",
+                "Name": "box4_1",
+                "X": 12,
+                "Y": 12,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Red": 255,
+                  "Green": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box3_1",
+                "Y": 12,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Red": 255,
+                  "Green": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box2_1",
+                "X": 12,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Red": 255,
+                  "Green": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box1_1",
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Red": 255,
+                  "Green": 255
+                }
+              }
+            ]
+          },
+          {
+            "Type": "Container",
+            "Name": "TetrominoContainer",
+            "X": 60,
+            "Y": 40,
+            "Width": 48,
+            "Height": 48,
+            "Components": [
+              {
+                "Type": "Box",
+                "Name": "box4",
+                "Y": 36,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Green": 255,
+                  "Blue": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box3",
+                "Y": 24,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Green": 255,
+                  "Blue": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box2",
+                "Y": 12,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Green": 255,
+                  "Blue": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "box1",
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Green": 255,
+                  "Blue": 255
+                }
+              }
+            ]
+          },
+          {
+            "Type": "TextArea",
+            "Name": "scoreText",
+            "X": 180,
+            "Y": 40,
+            "Width": 60,
+            "Height": 30,
+            "TextId": "__SingleUse_BZ3D",
+            "TextRotation": "0",
+            "Color": {
+              "Blue": 255
+            },
+            "Wildcard1": {
+              "UseBuffer": true,
+              "BufferSize": 14
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textArea1",
+            "X": 180,
+            "Y": 20,
+            "Width": 60,
+            "Height": 20,
+            "TextId": "__SingleUse_UYAG",
+            "TextRotation": "0",
+            "Color": {
+              "Blue": 255
+            }
+          },
+          {
+            "Type": "Box",
+            "Name": "nextPieceBox",
+            "X": 180,
+            "Y": 80,
+            "Width": 48,
+            "Height": 48,
+            "Color": {
+              "Red": 64,
+              "Green": 64,
+              "Blue": 64
+            }
+          },
+          {
+            "Type": "Container",
+            "Name": "NextTetrominoContainer",
+            "Width": 48,
+            "Height": 48,
+            "Components": [
+              {
+                "Type": "Box",
+                "Name": "nextCell4",
+                "Y": 36,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Blue": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "nextCell3",
+                "Y": 24,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Blue": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "nextCell2",
+                "Y": 12,
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Blue": 255
+                }
+              },
+              {
+                "Type": "Box",
+                "Name": "nextCell1",
+                "Width": 12,
+                "Height": 12,
+                "Color": {
+                  "Blue": 255
+                }
+              }
+            ]
+          },
+          {
+            "Type": "FlexButton",
+            "Name": "startPauseButton",
+            "X": 180,
+            "Y": 199,
+            "Width": 60,
+            "Height": 30,
+            "ButtonTrigger": {
+              "Type": "ClickButtonTrigger"
+            },
+            "ButtonStyles": [
+              {
+                "Type": "BoxWithBorderButtonStyle",
+                "Width": 60,
+                "Height": 30,
+                "LockToFlexButtonSize": true,
+                "BorderSize": 5,
+                "ColorReleased": {
+                  "Green": 102,
+                  "Blue": 153
+                },
+                "ColorPressed": {
+                  "Green": 153,
+                  "Blue": 204
+                },
+                "ColorBorderReleased": {
+                  "Green": 51,
+                  "Blue": 102
+                },
+                "ColorBorderPressed": {
+                  "Red": 51,
+                  "Green": 102,
+                  "Blue": 153
+                }
+              }
+            ]
+          }
+        ],
+        "Interactions": [
+          {
+            "InteractionName": "Interaction1",
+            "Trigger": {
+              "Type": "TriggerClicked",
+              "TriggerComponent": "startPauseButton"
+            },
+            "Action": {
+              "Type": "ActionCustom",
+              "FunctionName": "buttonClicked"
+            }
+          }
+        ]
+      }
+    ],
+    "CustomContainerDefinitions": [],
+    "Name": "TetrisGame",
+    "Resolution": {
+      "Width": 240,
+      "Height": 320
+    },
+    "SelectedColorDepth": 16,
+    "StartupScreenName": "Screen1",
+    "SelectedStartupLanguage": "GB",
+    "TouchGfxPath": "../Middlewares/ST/touchgfx",
+    "UIPath": ".",
+    "AvailableColorDepths": [
+      16
+    ],
+    "AvailableLCDs": {
+      "16": "LCD16bpp"
+    },
+    "AvailableSections": [
+      "ExtFlashSection",
+      "IntFlashSection"
+    ],
+    "AvailableResolutions": [
+      {
+        "Width": 240,
+        "Height": 320
+      }
+    ],
+    "PhysicalButtons": [],
+    "FrameworkFeatures": {
+      "LCD16bpp": {
+        "Id": "LCD16bpp",
+        "IsEnabled": true
+      }
+    },
+    "GenerateAssetsCommand": "make -f simulator/gcc/Makefile assets -j8",
+    "PostGenerateCommand": "touchgfx update_project --project-file=simulator/msvs/Application.vcxproj",
+    "PostGenerateTargetCommand": "touchgfx update_project",
+    "CompileSimulatorCommand": "make -f simulator/gcc/Makefile -j8",
+    "RunSimulatorCommand": "build\\bin\\simulator.exe",
+    "CompileTargetCommandOverride": "make -f ../gcc/Makefile -j8",
+    "FlashTargetCommandOverride": "make -f ../gcc/Makefile flash",
+    "LandscapeSkinX": 0,
+    "LandscapeSkinY": 0,
+    "PortraitSkinX": 0,
+    "PortraitSkinY": 0,
+    "DisplayOrientation": "Portrait",
+    "Family": "STM32F4",
+    "SubFamily": "STM32F429/439",
+    "Toolchain": "STM32CubeIDE",
+    "Platform": "m4",
+    "ProjectFile": "../STM32F429I_DISCO_REV_D01.ioc",
+    "OptionalComponentsRoot": "../Middlewares/ST/touchgfx_components",
+    "OptionalComponents": [],
+    "AdditionalFeatures": [
+      "CWRVector",
+      "VectorFonts"
+    ]
+  },
+  "Version": "4.25.0",
+  "CreatedBy": "4.25.0"
+}
