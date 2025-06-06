@@ -19,7 +19,7 @@ public:
     virtual void tearDownScreen();
     virtual void buttonClicked();
     virtual void handleTickEvent();
-protected:
+private:
     uint32_t tickCount = 0;
     bool isPaused = false;
     bool isGameOver = false;
@@ -85,315 +85,144 @@ protected:
 
     uint32_t score = 0;
 
-    bool checkCollision(int8_t newX, int8_t newY)
+    // Các tần số note cơ bản (8-bit style) - giá trị từ 0-255
+    static const uint8_t NOTE_C4 = 50;   // ~262 Hz
+    static const uint8_t NOTE_D4 = 60;   // ~294 Hz
+    static const uint8_t NOTE_E4 = 70;   // ~330 Hz
+    static const uint8_t NOTE_F4 = 75;   // ~349 Hz
+    static const uint8_t NOTE_G4 = 85;   // ~392 Hz
+    static const uint8_t NOTE_A4 = 95;   // ~440 Hz
+    static const uint8_t NOTE_B4 = 105;  // ~494 Hz
+    static const uint8_t NOTE_C5 = 110;  // ~523 Hz
+    static const uint8_t NOTE_D5 = 120;  // ~587 Hz
+    static const uint8_t NOTE_E5 = 130;  // ~659 Hz
+    static const uint8_t NOTE_F5 = 135;  // ~698 Hz
+    static const uint8_t NOTE_G5 = 145;  // ~784 Hz
+    static const uint8_t NOTE_A5 = 155;  // ~880 Hz
+    static const uint8_t NOTE_B5 = 165;  // ~988 Hz
+    static const uint8_t NOTE_C6 = 175;  // ~1047 Hz
+
+    // Background music state
+    bool backgroundMusicEnabled = true;
+    uint8_t currentMelodyIndex = 0;
+    uint32_t musicTick = 0;
+
+    // Tetris theme melody (simplified)
+    struct MusicNote {
+        uint8_t frequency;
+        uint16_t duration; // Sửa thành uint16_t để hỗ trợ giá trị lớn
+    };
+
+    static const MusicNote tetrisTheme[32]; // Chỉ khai báo, định nghĩa trong .cpp
+
+    // Hàm phát âm thanh đơn giản
+    void playSound(uint8_t frequency, uint16_t duration)
     {
-        for (int i = 0; i < 4; i++)
-        {
-            int8_t cellX = newX + currentPiece.cells[i][0];
-            int8_t cellY = newY + currentPiece.cells[i][1];
-            if (cellX < 0 || cellX >= 10 || cellY >= 20)
-                return true;
-            if (cellY >= 0 && board[cellY][cellX] != 0)
-                return true;
-        }
-        return false;
+        uint16_t soundData = (frequency << 8) | (duration & 0xFF);
+        osMessageQueuePut(soundQueueHandle, &soundData, 0, 0);
     }
 
-    void placePiece()
+    // Hàm dừng âm thanh
+    void stopSound()
     {
-        for (int i = 0; i < 4; i++)
+        uint16_t soundData = 0; // frequency = 0 để dừng
+        osMessageQueuePut(soundQueueHandle, &soundData, 0, 0);
+    }
+
+    // Các âm thanh game cụ thể
+    void playMoveSound()
+    {
+        playSound(NOTE_C4, 50);
+    }
+
+    void playRotateSound()
+    {
+        playSound(NOTE_E4, 80);
+    }
+
+    void playDropSound()
+    {
+        playSound(NOTE_G4, 60);
+    }
+
+    void playLineClearSound()
+    {
+        // Phát một chuỗi âm thanh ngắn
+        playSound(NOTE_C5, 100);
+        osDelay(50);
+        playSound(NOTE_E5, 100);
+        osDelay(50);
+        playSound(NOTE_G5, 150);
+    }
+
+    void playGameOverSound()
+    {
+        // Âm thanh game over - từ cao xuống thấp
+        playSound(NOTE_C6, 200);
+        osDelay(100);
+        playSound(NOTE_A5, 200);
+        osDelay(100);
+        playSound(NOTE_F5, 200);
+        osDelay(100);
+        playSound(NOTE_C5, 400);
+    }
+
+    void playLevelUpSound()
+    {
+        // Âm thanh tăng level - từ thấp lên cao
+        playSound(NOTE_C4, 100);
+        osDelay(50);
+        playSound(NOTE_E4, 100);
+        osDelay(50);
+        playSound(NOTE_G4, 100);
+        osDelay(50);
+        playSound(NOTE_C5, 200);
+    }
+
+    void playFastDropSound()
+    {
+        playSound(NOTE_A4, 30);
+    }
+
+    // Background music control
+    void playBackgroundMusic()
+    {
+        if (!backgroundMusicEnabled) return;
+
+        musicTick++;
+        if (musicTick % 60 == 0) // Mỗi giây chơi một note
         {
-            int8_t cellX = currentX + currentPiece.cells[i][0];
-            int8_t cellY = currentY + currentPiece.cells[i][1];
-            if (cellY >= 0 && cellY < 20 && cellX >= 0 && cellX < 10)
+            MusicNote note = tetrisTheme[currentMelodyIndex];
+            playSound(note.frequency, note.duration);
+
+            currentMelodyIndex++;
+            if (currentMelodyIndex >= 32)
             {
-                board[cellY][cellX] = currentPiece.color;
+                currentMelodyIndex = 0; // Lặp lại
             }
         }
     }
 
-    void updateBoardDisplay()
+    void toggleBackgroundMusic()
     {
-        for (int row = 0; row < 20; row++)
+        backgroundMusicEnabled = !backgroundMusicEnabled;
+        if (!backgroundMusicEnabled)
         {
-            for (int col = 0; col < 10; col++)
-            {
-                if (board[row][col] == 0)
-                {
-                    boardCells[row][col].setVisible(false);
-                    boardCells[row][col].invalidate();
-                }
-                else
-                {
-                    boardCells[row][col].setVisible(true);
-                    boardCells[row][col].setXY(col * 12 + 60, row * 12 + 40);
-                    boardCells[row][col].setWidthHeight(12, 12);
-                    boardCells[row][col].setColor(pieceColors[board[row][col]]);
-                    boardCells[row][col].invalidate();
-                }
-            }
+            stopSound();
         }
     }
 
-    void updateTetrominoDisplay()
-    {
-        for (int i = 0; i < 7; i++)
-        {
-            tetrominoContainers[i]->setVisible(false);
-            tetrominoContainers[i]->invalidate();
-        }
-        updateCurrentTetrominoUI();
-    }
-
-    void handleControlInput()
-    {
-        if (isGameOver) return;
-        uint8_t controlSignal;
-        if (osMessageQueueGet(controlQueueHandle, &controlSignal, NULL, 0) == osOK)
-        {
-            if (controlSignal == 1 && !checkCollision(currentX - 1, currentY)) // Trái
-            {
-                currentX--;
-                updateCurrentTetrominoUI();
-            }
-            else if (controlSignal == 2 && !checkCollision(currentX + 1, currentY)) // Phải
-            {
-                currentX++;
-                updateCurrentTetrominoUI();
-            }
-            else if (controlSignal == 3) // Xoay
-            {
-                rotatePiece();
-            }
-            else if (controlSignal == 4) // Rơi nhanh
-            {
-                isFastDropping = true;
-            }
-            else if (controlSignal == 5) // Nhả rơi nhanh
-            {
-                isFastDropping = false;
-            }
-        }
-    }
-
-    int checkAndClearLines()
-    {
-        int linesCleared = 0;
-
-        for (int row = 19; row >= 0; row--)
-        {
-            bool isFull = true;
-            for (int col = 0; col < 10; col++)
-            {
-                if (board[row][col] == 0)
-                {
-                    isFull = false;
-                    break;
-                }
-            }
-
-            if (isFull)
-            {
-                linesCleared++;
-                for (int r = row; r > 0; r--)
-                {
-                    for (int col = 0; col < 10; col++)
-                    {
-                        board[r][col] = board[r-1][col];
-                    }
-                }
-                for (int col = 0; col < 10; col++)
-                {
-                    board[0][col] = 0;
-                }
-                row++;
-            }
-        }
-
-        int points[] = {0, 100, 300, 600, 1000};
-        if (linesCleared > 0)
-        {
-            score += points[linesCleared];
-        }
-
-        return linesCleared;
-    }
-
-    void updateScoreDisplay()
-    {
-        if (isGameOver)
-        {
-            Unicode::snprintf(scoreTextBuffer, SCORETEXT_SIZE, "Game Over");
-        }
-        else
-        {
-            Unicode::snprintf(scoreTextBuffer, SCORETEXT_SIZE, isPaused ? "Paused" : "%d", score);
-        }
-        scoreText.invalidate();
-    }
-
-    void updateNextPieceDisplay()
-    {
-        NextTetrominoContainer.setXY(196, 80);
-        for (int i = 0; i < 4; i++)
-        {
-            int8_t relativeX = nextPiece.cells[i][0];
-            int8_t relativeY = nextPiece.cells[i][1];
-            switch (i)
-            {
-                case 0:
-                    nextCell1.setXY(relativeX * 12, relativeY * 12);
-                    nextCell1.setColor(pieceColors[nextPiece.color]);
-                    nextCell1.invalidate();
-                    break;
-                case 1:
-                    nextCell2.setXY(relativeX * 12, relativeY * 12);
-                    nextCell2.setColor(pieceColors[nextPiece.color]);
-                    nextCell2.invalidate();
-                    break;
-                case 2:
-                    nextCell3.setXY(relativeX * 12, relativeY * 12);
-                    nextCell3.setColor(pieceColors[nextPiece.color]);
-                    nextCell3.invalidate();
-                    break;
-                case 3:
-                    nextCell4.setXY(relativeX * 12, relativeY * 12);
-                    nextCell4.setColor(pieceColors[nextPiece.color]);
-                    nextCell4.invalidate();
-                    break;
-            }
-        }
-        NextTetrominoContainer.invalidate();
-    }
-
-    void resetGame()
-    {
-        for (int i = 0; i < 7; i++)
-        {
-            tetrominoContainers[i]->setVisible(false);
-            tetrominoContainers[i]->invalidate();
-        }
-
-        for (int row = 0; row < 20; row++)
-        {
-            for (int col = 0; col < 10; col++)
-            {
-                board[row][col] = 0;
-                boardCells[row][col].setVisible(false);
-                boardCells[row][col].invalidate();
-            }
-        }
-
-        updateBoardDisplay();
-
-        score = 0;
-        isGameOver = false;
-        isPaused = false;
-
-        uint8_t pieceIndex;
-        if (osMessageQueueGet(pieceQueueHandle, &pieceIndex, NULL, 0) == osOK)
-        {
-            currentPiece = tetrominoes[pieceIndex];
-        }
-        else
-        {
-            currentPiece = tetrominoes[0];
-        }
-
-        currentX = 3;
-        currentY = -1;
-        updateTetrominoDisplay();
-
-        if (osMessageQueueGet(pieceQueueHandle, &pieceIndex, NULL, 0) == osOK)
-        {
-            nextPiece = tetrominoes[pieceIndex];
-        }
-        else
-        {
-            nextPiece = tetrominoes[0];
-        }
-
-        updateNextPieceDisplay();
-        updateScoreDisplay();
-
-        invalidate();
-    }
-
-    void rotatePiece()
-    {
-        int8_t originalCells[4][2];
-        for (int i = 0; i < 4; i++)
-        {
-            originalCells[i][0] = currentPiece.cells[i][0];
-            originalCells[i][1] = currentPiece.cells[i][1];
-        }
-
-        // Xoay 90 độ
-        for (int i = 0; i < 4; i++)
-        {
-            int8_t x = currentPiece.cells[i][0];
-            int8_t y = currentPiece.cells[i][1];
-            currentPiece.cells[i][0] = -y;
-            currentPiece.cells[i][1] = x;
-        }
-
-        // Dịch về góc 0,0 nhỏ nhất
-        int8_t minX = currentPiece.cells[0][0];
-        int8_t minY = currentPiece.cells[0][1];
-        for (int i = 1; i < 4; i++)
-        {
-            if (currentPiece.cells[i][0] < minX) minX = currentPiece.cells[i][0];
-            if (currentPiece.cells[i][1] < minY) minY = currentPiece.cells[i][1];
-        }
-        for (int i = 0; i < 4; i++)
-        {
-            currentPiece.cells[i][0] -= minX;
-            currentPiece.cells[i][1] -= minY;
-        }
-
-        if (checkCollision(currentX, currentY))
-        {
-            for (int i = 0; i < 4; i++)
-            {
-                currentPiece.cells[i][0] = originalCells[i][0];
-                currentPiece.cells[i][1] = originalCells[i][1];
-            }
-        }
-
-        updateCurrentTetrominoUI();
-    }
-
-    void updateCurrentTetrominoUI()
-    {
-        int pieceIndex = currentPiece.color - 1;
-        Container* cont = tetrominoContainers[pieceIndex];
-
-        // Chọn đúng 4 box cho loại tetromino
-        Box* boxes[4];
-        switch (pieceIndex)
-        {
-            case 0: boxes[0] = &box1;   boxes[1] = &box2;   boxes[2] = &box3;   boxes[3] = &box4;   break; // I
-            case 1: boxes[0] = &box1_1; boxes[1] = &box2_1; boxes[2] = &box3_1; boxes[3] = &box4_1; break; // O
-            case 2: boxes[0] = &box1_2; boxes[1] = &box2_2; boxes[2] = &box3_2; boxes[3] = &box4_2; break; // T
-            case 3: boxes[0] = &box1_3; boxes[1] = &box2_3; boxes[2] = &box3_3; boxes[3] = &box4_3; break; // S
-            case 4: boxes[0] = &box1_4; boxes[1] = &box2_4; boxes[2] = &box3_4; boxes[3] = &box4_4; break; // Z
-            case 5: boxes[0] = &box1_5; boxes[1] = &box2_5; boxes[2] = &box3_5; boxes[3] = &box4_5; break; // L
-            case 6: boxes[0] = &box1_6; boxes[1] = &box2_6; boxes[2] = &box3_6; boxes[3] = &box4_6; break; // J
-            default: return;
-        }
-
-        for (int i = 0; i < 4; i++)
-        {
-            int16_t cellX = currentPiece.cells[i][0];
-            int16_t cellY = currentPiece.cells[i][1];
-            boxes[i]->setXY(cellX * 12, cellY * 12);
-            boxes[i]->setVisible(true);
-            boxes[i]->invalidate();
-        }
-        cont->setXY(currentX * 12 + 60, currentY * 12 + 40);
-        cont->setVisible(true);
-        cont->invalidate();
-    }
+    bool checkCollision(int8_t newX, int8_t newY);
+    void placePiece();
+    void updateBoardDisplay();
+    void updateTetrominoDisplay();
+    void handleControlInput();
+    int checkAndClearLines();
+    void updateScoreDisplay();
+    void updateNextPieceDisplay();
+    void resetGame();
+    void rotatePiece();
+    void updateCurrentTetrominoUI();
 };
 
 #endif // SCREEN1VIEW_HPP
