@@ -50,12 +50,15 @@ extern "C" {
 
 /* USER CODE END EM */
 
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 extern osMessageQueueId_t pieceQueueHandle;
 extern osMessageQueueId_t controlQueueHandle;
+extern osMessageQueueId_t soundQueueHandle;
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

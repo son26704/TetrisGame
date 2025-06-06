@@ -25,6 +25,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "Components/ili9341/ili9341.h"
+#include "stm32f4xx_hal_tim.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -74,6 +75,8 @@ RNG_HandleTypeDef hrng;
 
 SPI_HandleTypeDef hspi5;
 
+TIM_HandleTypeDef htim1;
+
 SDRAM_HandleTypeDef hsdram1;
 
 /* Definitions for defaultTask */
@@ -104,6 +107,13 @@ const osThreadAttr_t inputTask_attributes = {
   .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityAboveNormal,
 };
+/* Definitions for soundTask */
+osThreadId_t soundTaskHandle;
+const osThreadAttr_t soundTask_attributes = {
+  .name = "soundTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* Definitions for pieceQueue */
 osMessageQueueId_t pieceQueueHandle;
 const osMessageQueueAttr_t pieceQueue_attributes = {
@@ -114,9 +124,16 @@ uint8_t isRevD = 0; /* Applicable only for STM32F429I DISCOVERY REVD and above *
 RNG_HandleTypeDef hrng;
 extern osMessageQueueId_t pieceQueueHandle;
 extern osMessageQueueId_t controlQueueHandle;
+extern osMessageQueueId_t soundQueueHandle;
+
 osMessageQueueId_t controlQueueHandle;
 const osMessageQueueAttr_t controlQueue_attributes = {
 		.name = "controlQueue"
+};
+
+osMessageQueueId_t soundQueueHandle;
+const osMessageQueueAttr_t soundQueue_attributes = {
+		.name = "soundQueue"
 };
 /* USER CODE END PV */
 
@@ -130,10 +147,12 @@ static void MX_FMC_Init(void);
 static void MX_LTDC_Init(void);
 static void MX_DMA2D_Init(void);
 static void MX_RNG_Init(void);
+static void MX_TIM1_Init(void);
 void StartDefaultTask(void *argument);
 extern void TouchGFX_Task(void *argument);
 void StartGameTask(void *argument);
 void StartInputTask(void *argument);
+void StartSoundTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 static void BSP_SDRAM_Initialization_Sequence(SDRAM_HandleTypeDef *hsdram, FMC_SDRAM_CommandTypeDef *Command);
@@ -164,6 +183,7 @@ void                      IOE_Write(uint8_t Addr, uint8_t Reg, uint8_t Value);
 uint8_t                   IOE_Read(uint8_t Addr, uint8_t Reg);
 uint16_t                  IOE_ReadMultiple(uint8_t Addr, uint8_t Reg, uint8_t *pBuffer, uint16_t Length);
 
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -172,6 +192,7 @@ static LCD_DrvTypeDef* LcdDrv;
 
 uint32_t I2c3Timeout = I2C3_TIMEOUT_MAX; /*<! Value of Timeout when I2C communication fails */
 uint32_t Spi5Timeout = SPI5_TIMEOUT_MAX; /*<! Value of Timeout when SPI communication fails */
+
 /* USER CODE END 0 */
 
 /**
@@ -210,6 +231,7 @@ int main(void)
   MX_LTDC_Init();
   MX_DMA2D_Init();
   MX_RNG_Init();
+  MX_TIM1_Init();
   MX_TouchGFX_Init();
   /* Call PreOsInit function */
   MX_TouchGFX_PreOSInit();
@@ -243,6 +265,9 @@ int main(void)
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   controlQueueHandle = osMessageQueueNew(16, sizeof(uint8_t), &controlQueue_attributes);
+  soundQueueHandle = osMessageQueueNew(8, sizeof(uint16_t), &soundQueue_attributes);
+  // Khởi động PWM trên TIM1_CH2 (PA9)
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -257,6 +282,9 @@ int main(void)
 
   /* creation of inputTask */
   inputTaskHandle = osThreadNew(StartInputTask, NULL, &inputTask_attributes);
+
+  /* creation of soundTask */
+  soundTaskHandle = osThreadNew(StartSoundTask, NULL, &soundTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -578,6 +606,81 @@ static void MX_SPI5_Init(void)
     isRevD = 1;
   }
   /* USER CODE END SPI5_Init 2 */
+
+}
+
+/**
+  * @brief TIM1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM1_Init(void)
+{
+
+  /* USER CODE BEGIN TIM1_Init 0 */
+
+  /* USER CODE END TIM1_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+  TIM_BreakDeadTimeConfigTypeDef sBreakDeadTimeConfig = {0};
+
+  /* USER CODE BEGIN TIM1_Init 1 */
+
+  /* USER CODE END TIM1_Init 1 */
+  htim1.Instance = TIM1;
+  htim1.Init.Prescaler = 83;
+  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim1.Init.Period = 666;
+  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim1.Init.RepetitionCounter = 0;
+  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 333;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+  sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
+  sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
+  sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
+  sBreakDeadTimeConfig.DeadTime = 0;
+  sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
+  sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
+  sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
+  if (HAL_TIMEx_ConfigBreakDeadTime(&htim1, &sBreakDeadTimeConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM1_Init 2 */
+
+  /* USER CODE END TIM1_Init 2 */
+  HAL_TIM_MspPostInit(&htim1);
 
 }
 
@@ -1139,6 +1242,60 @@ void StartInputTask(void *argument)
 	  osDelay(5);
   }
   /* USER CODE END StartInputTask */
+}
+
+/* USER CODE BEGIN Header_StartSoundTask */
+/**
+* @brief Function implementing the soundTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartSoundTask */
+void StartSoundTask(void *argument)
+{
+  /* USER CODE BEGIN StartSoundTask */
+	uint16_t soundData;
+  /* Infinite loop */
+	for(;;)
+	{
+		if (osMessageQueueGet(soundQueueHandle, &soundData, NULL, osWaitForever) == osOK)
+		{
+			uint16_t frequency = (soundData >> 8) & 0xFF; // Tần số (100-400 Hz cho 8-bit retro)
+			uint16_t duration = soundData & 0xFF;         // Thời gian phát (ms)
+
+			if (frequency == 0) // Lệnh dừng âm thanh
+			{
+				HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_2);
+				continue;
+			}
+
+			// Chuyển đổi frequency từ 0-255 về Hz thực (200-2000 Hz)
+			uint32_t realFreq = 200 + (frequency * 1800 / 255);
+
+			// Tính toán giá trị ARR để đạt tần số mong muốn
+			// Clock Timer = 1 MHz (Prescaler = 83, Clock hệ thống = 84 MHz)
+			uint32_t arr = (1000000 / realFreq) - 1;
+
+			// Đảm bảo ARR không vượt quá 16-bit
+			if (arr > 65535) arr = 65535;
+
+			__HAL_TIM_SET_AUTORELOAD(&htim1, arr);
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, arr / 2); // Duty cycle 50%
+
+			// Bắt đầu PWM
+			HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+
+			// Phát âm thanh trong thời gian duration
+			osDelay(duration);
+
+			// Tắt âm thanh
+			HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_2);
+
+			// Nghỉ ngắn giữa các âm thanh để tránh tiếng ồn
+			osDelay(10);
+		}
+	}
+  /* USER CODE END StartSoundTask */
 }
 
 /**
