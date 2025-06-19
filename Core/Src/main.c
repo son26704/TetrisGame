@@ -1095,6 +1095,15 @@ void StartInputTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
+
+	  uint8_t startPauseState = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+	  if (startPauseState == GPIO_PIN_RESET && lastStartPauseState == GPIO_PIN_SET)
+	  {
+	              controlSignal = 6; // Tín hiệu Start/Pause
+	              osMessageQueuePut(controlQueueHandle, &controlSignal, 0, 0);
+	          }
+	          lastStartPauseState = startPauseState;
+	          osDelay(5);
 	  // Đọc trạng thái nút Left (PC0)
 	  uint8_t leftState = HAL_GPIO_ReadPin(GPIOG, GPIO_PIN_2);
 	  if (leftState == GPIO_PIN_RESET && lastLeftState == GPIO_PIN_SET) // Nhấn nút Left
