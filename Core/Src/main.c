@@ -107,7 +107,13 @@ const osThreadAttr_t inputTask_attributes = {
   .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityAboveNormal,
 };
-
+/* Definitions for soundTask */
+osThreadId_t soundTaskHandle;
+const osThreadAttr_t soundTask_attributes = {
+  .name = "soundTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* Definitions for pieceQueue */
 osMessageQueueId_t pieceQueueHandle;
 const osMessageQueueAttr_t pieceQueue_attributes = {
@@ -127,6 +133,10 @@ const osMessageQueueAttr_t controlQueue_attributes = {
 		.name = "controlQueue"
 };
 
+osMessageQueueId_t soundQueueHandle;
+const osMessageQueueAttr_t soundQueue_attributes = {
+		.name = "soundQueue"
+};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -257,6 +267,7 @@ int main(void)
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   controlQueueHandle = osMessageQueueNew(16, sizeof(uint8_t), &controlQueue_attributes);
+  soundQueueHandle = osMessageQueueNew(8, sizeof(uint16_t), &soundQueue_attributes);
   // Khởi động PWM trên TIM1_CH2 (PA9)
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   /* USER CODE END RTOS_QUEUES */
@@ -274,6 +285,8 @@ int main(void)
   /* creation of inputTask */
   inputTaskHandle = osThreadNew(StartInputTask, NULL, &inputTask_attributes);
 
+  /* creation of soundTask */
+  soundTaskHandle = osThreadNew(StartSoundTask, NULL, &soundTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -1260,7 +1273,57 @@ void StartInputTask(void *argument)
 }
 
 /* USER CODE BEGIN Header_StartSoundTask */
+/**
+* @brief Function implementing the soundTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartSoundTask */
+void StartSoundTask(void *argument)
+{
+  /* USER CODE BEGIN StartSoundTask */
+	uint16_t soundData;
+  /* Infinite loop */
+	for(;;)
+	{
+		if (osMessageQueueGet(soundQueueHandle, &soundData, NULL, osWaitForever) == osOK)
+		{
+			uint16_t frequency = (soundData >> 8) & 0xFF; // Tần số (100-400 Hz cho 8-bit retro)
+			uint16_t duration = soundData & 0xFF;         // Thời gian phát (ms)
 
+			if (frequency == 0) // Lệnh dừng âm thanh
+			{
+				HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_2);
+				continue;
+			}
+
+			// Chuyển đổi frequency từ 0-255 về Hz thực (200-2000 Hz)
+			uint32_t realFreq = 200 + (frequency * 1800 / 255);
+
+			// Tính toán giá trị ARR để đạt tần số mong muốn
+			// Clock Timer = 1 MHz (Prescaler = 83, Clock hệ thống = 84 MHz)
+			uint32_t arr = (1000000 / realFreq) - 1;
+
+			// Đảm bảo ARR không vượt quá 16-bit
+			if (arr > 65535) arr = 65535;
+
+			__HAL_TIM_SET_AUTORELOAD(&htim1, arr);
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, arr / 2); // Duty cycle 50%
+
+			// Bắt đầu PWM
+			HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+
+			// Phát âm thanh trong thời gian duration
+			osDelay(duration);
+
+			// Tắt âm thanh
+			HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_2);
+
+			// Nghỉ ngắn giữa các âm thanh để tránh tiếng ồn
+			osDelay(10);
+		}
+	}
+  /* USER CODE END StartSoundTask */
 }
 
 /**

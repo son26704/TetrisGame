@@ -84,15 +84,132 @@ private:
     uint32_t score = 0;
     uint32_t highScore = 0;
 
-    // Effect variables
-    bool isLineClearEffect = false;
-    uint8_t lineClearRows[4] = {0}; // Store up to 4 cleared rows
-    uint8_t numLinesCleared = 0;
-    uint32_t lineClearEffectTick = 0;
-    bool isGameOverEffect = false;
-    uint32_t gameOverEffectTick = 0;
-    bool isScoreHighlight = false;
-    uint32_t scoreHighlightTick = 0;
+    // Các tần số note cơ bản (8-bit style) - giá trị từ 0-255
+    static const uint8_t NOTE_C4 = 50;   // ~262 Hz
+    static const uint8_t NOTE_D4 = 60;   // ~294 Hz
+    static const uint8_t NOTE_E4 = 70;   // ~330 Hz
+    static const uint8_t NOTE_F4 = 75;   // ~349 Hz
+    static const uint8_t NOTE_G4 = 85;   // ~392 Hz
+    static const uint8_t NOTE_A4 = 95;   // ~440 Hz
+    static const uint8_t NOTE_B4 = 105;  // ~494 Hz
+    static const uint8_t NOTE_C5 = 110;  // ~523 Hz
+    static const uint8_t NOTE_D5 = 120;  // ~587 Hz
+    static const uint8_t NOTE_E5 = 130;  // ~659 Hz
+    static const uint8_t NOTE_F5 = 135;  // ~698 Hz
+    static const uint8_t NOTE_G5 = 145;  // ~784 Hz
+    static const uint8_t NOTE_A5 = 155;  // ~880 Hz
+    static const uint8_t NOTE_B5 = 165;  // ~988 Hz
+    static const uint8_t NOTE_C6 = 175;  // ~1047 Hz
+
+    // Background music state
+    bool backgroundMusicEnabled = true;
+    uint8_t currentMelodyIndex = 0;
+    uint32_t musicTick = 0;
+
+    // Tetris theme melody (simplified)
+    struct MusicNote {
+        uint8_t frequency;
+        uint16_t duration; // Sửa thành uint16_t để hỗ trợ giá trị lớn
+    };
+
+    static const MusicNote tetrisTheme[32]; // Chỉ khai báo, định nghĩa trong .cpp
+
+    // Hàm phát âm thanh đơn giản
+    void playSound(uint8_t frequency, uint16_t duration)
+    {
+        uint16_t soundData = (frequency << 8) | (duration & 0xFF);
+        osMessageQueuePut(soundQueueHandle, &soundData, 0, 0);
+    }
+
+    // Hàm dừng âm thanh
+    void stopSound()
+    {
+        uint16_t soundData = 0; // frequency = 0 để dừng
+        osMessageQueuePut(soundQueueHandle, &soundData, 0, 0);
+    }
+
+    // Các âm thanh game cụ thể
+    void playMoveSound()
+    {
+        playSound(NOTE_C4, 50);
+    }
+
+    void playRotateSound()
+    {
+        playSound(NOTE_E4, 80);
+    }
+
+    void playDropSound()
+    {
+        playSound(NOTE_G4, 60);
+    }
+
+    void playLineClearSound()
+    {
+        // Phát một chuỗi âm thanh ngắn
+        playSound(NOTE_C5, 100);
+        osDelay(50);
+        playSound(NOTE_E5, 100);
+        osDelay(50);
+        playSound(NOTE_G5, 150);
+    }
+
+    void playGameOverSound()
+    {
+        // Âm thanh game over - từ cao xuống thấp
+        playSound(NOTE_C6, 200);
+        osDelay(100);
+        playSound(NOTE_A5, 200);
+        osDelay(100);
+        playSound(NOTE_F5, 200);
+        osDelay(100);
+        playSound(NOTE_C5, 400);
+    }
+
+    void playLevelUpSound()
+    {
+        // Âm thanh tăng level - từ thấp lên cao
+        playSound(NOTE_C4, 100);
+        osDelay(50);
+        playSound(NOTE_E4, 100);
+        osDelay(50);
+        playSound(NOTE_G4, 100);
+        osDelay(50);
+        playSound(NOTE_C5, 200);
+    }
+
+    void playFastDropSound()
+    {
+        playSound(NOTE_A4, 30);
+    }
+
+    // Background music control
+    void playBackgroundMusic()
+    {
+        if (!backgroundMusicEnabled) return;
+
+        musicTick++;
+        if (musicTick % 60 == 0) // Mỗi giây chơi một note
+        {
+            MusicNote note = tetrisTheme[currentMelodyIndex];
+            playSound(note.frequency, note.duration);
+
+            currentMelodyIndex++;
+            if (currentMelodyIndex >= 32)
+            {
+                currentMelodyIndex = 0; // Lặp lại
+            }
+        }
+    }
+
+    void toggleBackgroundMusic()
+    {
+        backgroundMusicEnabled = !backgroundMusicEnabled;
+        if (!backgroundMusicEnabled)
+        {
+            stopSound();
+        }
+    }
 
     bool checkCollision(int8_t newX, int8_t newY);
     void placePiece();
@@ -105,19 +222,6 @@ private:
     void resetGame();
     void rotatePiece();
     void updateCurrentTetrominoUI();
-
-    // New effect functions
-    void startLineClearEffect(int rows[], int count);
-    void updateLineClearEffect();
-    void startGameOverEffect();
-    void updateGameOverEffect();
-    void highlightScore();
-    void updateScoreHighlight();
-
-    TextAreaWithOneWildcard& gameOverText;
-
-    void readHighScoreFromFlash();
-    void writeHighScoreToFlash(uint32_t newScore);
 };
 
 #endif // SCREEN1VIEW_HPP
