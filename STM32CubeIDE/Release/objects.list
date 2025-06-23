@@ -38,6 +38,7 @@
 "./Application/User/generated/TypedTextDatabase.o"
 "./Application/User/generated/UnmappedDataFont.o"
 "./Application/User/generated/VectorFontRendererBuffers.o"
+"./Application/User/generated/image_brickwall.o"
 "./Application/User/gui/FrontendApplication.o"
 "./Application/User/gui/Model.o"
 "./Application/User/gui/Screen1Presenter.o"

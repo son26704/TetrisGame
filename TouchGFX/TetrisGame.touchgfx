@@ -5,6 +5,13 @@
         "Name": "Screen1",
         "Components": [
           {
+            "Type": "Image",
+            "Name": "brickwall",
+            "Width": 240,
+            "Height": 320,
+            "RelativeFilename": "brickwall.png"
+          },
+          {
             "Type": "Box",
             "Name": "gameBoard",
             "X": 60,
@@ -390,7 +397,7 @@
             "Type": "TextArea",
             "Name": "scoreText",
             "X": 180,
-            "Y": 40,
+            "Y": 36,
             "Width": 60,
             "Height": 30,
             "TextId": "__SingleUse_BZ3D",
@@ -407,12 +414,27 @@
             "Type": "TextArea",
             "Name": "textArea1",
             "X": 180,
-            "Y": 20,
+            "Y": 18,
             "Width": 60,
             "Height": 20,
             "TextId": "__SingleUse_UYAG",
             "TextRotation": "0",
             "Color": {
+              "Blue": 255
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textArea2",
+            "X": 180,
+            "Y": 65,
+            "Width": 60,
+            "Height": 15,
+            "TextId": "__SingleUse_S4HN",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
               "Blue": 255
             }
           },
@@ -512,6 +534,23 @@
                 }
               }
             ]
+          },
+          {
+            "Type": "TextArea",
+            "Name": "gameOverText",
+            "X": 40,
+            "Y": 280,
+            "Width": 180,
+            "Height": 20,
+            "TextId": "__SingleUse_EA3Q",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255
+            },
+            "Wildcard1": {
+              "UseBuffer": true,
+              "BufferSize": 25
+            }
           }
         ],
         "Interactions": [

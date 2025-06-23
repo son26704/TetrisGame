@@ -123,8 +123,6 @@ const osMessageQueueAttr_t pieceQueue_attributes = {
 uint8_t isRevD = 0; /* Applicable only for STM32F429I DISCOVERY REVD and above */
 RNG_HandleTypeDef hrng;
 extern osMessageQueueId_t pieceQueueHandle;
-
-
 extern osMessageQueueId_t controlQueueHandle;
 extern osMessageQueueId_t soundQueueHandle;
 
@@ -507,6 +505,7 @@ static void MX_LTDC_Init(void)
   }
   pLayerCfg.WindowX0 = 0;
   pLayerCfg.WindowX1 = 240;
+  pLayerCfg.WindowY0 = 0;
   pLayerCfg.WindowY1 = 320;
   pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
   pLayerCfg.Alpha = 255;
@@ -836,6 +835,19 @@ static void MX_GPIO_Init(void)
   * @param  Command: Pointer to SDRAM command structure
   * @retval None
   */
+uint8_t bag[7] = {0,1,2,3,4,5,6};
+uint8_t bagIndex = 0;
+
+void ShuffleBag() {
+  for (int i = 6; i > 0; --i) {
+    uint32_t rand;
+    HAL_RNG_GenerateRandomNumber(&hrng, &rand);
+    int j = rand % (i + 1);
+    uint8_t temp = bag[i];
+    bag[i] = bag[j];
+    bag[j] = temp;
+  }
+}
 
 static void BSP_SDRAM_Initialization_Sequence(SDRAM_HandleTypeDef *hsdram, FMC_SDRAM_CommandTypeDef *Command)
 {
@@ -1185,15 +1197,17 @@ void StartGameTask(void *argument)
 {
   /* USER CODE BEGIN StartGameTask */
   /* Infinite loop */
-	uint32_t random;
+//	uint32_t random;
+	ShuffleBag();
   for(;;)
   {
-	  if (HAL_RNG_GenerateRandomNumber(&hrng, &random) == HAL_OK)
-	  {
-		  uint8_t pieceIndex = (random % 7); // 0-6 cho 7 loại khối
-		  osMessageQueuePut(pieceQueueHandle, &pieceIndex, 0, 10);
-	  }
-	  osDelay(10);
+	  if (bagIndex >= 7) {
+	        ShuffleBag();
+	        bagIndex = 0;
+	      }
+	      uint8_t pieceIndex = bag[bagIndex++];
+	      osMessageQueuePut(pieceQueueHandle, &pieceIndex, 0, 10);
+	      osDelay(10);
   }
   /* USER CODE END StartGameTask */
 }
@@ -1258,11 +1272,11 @@ void StartInputTask(void *argument)
 	  }
 	  lastFastDropState = fastDropState;
 
-	  // Nút Start/Pause (PA0)
+	  // Nút Start/Pause (PA0) - Thêm đoạn mã này
 	  uint8_t startPauseState = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
 	  if (startPauseState == GPIO_PIN_RESET && lastStartPauseState == GPIO_PIN_SET)
 	  {
-		  controlSignal = 6;
+		  controlSignal = 6; // Tín hiệu 6 để gọi buttonClicked()
 		  osMessageQueuePut(controlQueueHandle, &controlSignal, 0, 0);
 	  }
 	  lastStartPauseState = startPauseState;
