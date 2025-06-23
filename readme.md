@@ -1,209 +1,203 @@
-Tetris Game on STM32F429I-DISCOVERY 🎮
-This project implements the classic Tetris game on the STM32F429I-DISCOVERY board, powered by the STM32F429ZIT6 microcontroller with an ARM Cortex-M4 core. The game features a vibrant graphical user interface (GUI) designed with TouchGFX, displayed on a 2.4-inch TFT LCD, and includes physical button controls, touch input, and sound effects via a passive buzzer. FreeRTOS ensures smooth real-time task management for an engaging gameplay experience.
-📋 Project Overview
+# 🎮 Tetris Game on STM32F429I-DISCOVERY
+
+A classic **Tetris game** implemented on the **STM32F429I-DISCOVERY** board using **TouchGFX**, **FreeRTOS**, and various peripherals like tactile buttons, touch input, and a passive buzzer.
+
+---
+
+## 📋 Project Overview
+
+- **Team Members**:
+  - Nguyễn Trung Sơn – 20225225  
+  - Nguyễn Quang Huy – 20225336  
+  - Ngân Văn Thiện – 20215647  
+
+- **Instructor**: Dr. Ngô Lam Trung  
+- **Platform**: STM32F429I-DISCOVERY (STM32F429ZIT6, ARM Cortex-M4)  
+- **Tools**: STM32CubeIDE, TouchGFX  
+- **Hardware**:
+  - 2.4" TFT LCD (ILI9341) with touch
+  - Passive buzzer (KY-006)
+  - Tactile buttons
+
+- **Goal**: Build an interactive Tetris game with smooth graphics, responsive controls, sound effects, and high score saving — demonstrating embedded systems and GUI design.
+
+---
+
+## ✨ Features
+
+### 🎮 Gameplay
+- 10x20 Tetris grid with standard 7 tetrominoes (I, O, T, S, Z, L, J)
+- Random piece generation using hardware RNG ("bag" system)
+- Game states: **play**, **pause**, **game over**, **restart**
+- Controls:
+  - Move left: PG2
+  - Move right: PG3
+  - Rotate clockwise: PC4
+  - Soft drop: PC5
+  - Start/pause: PA0 or touch button
+
+### ⌨️ Input Handling
+- Four tactile buttons + onboard PA0
+- Touch input for start/pause
+- Debouncing logic for accurate presses
+
+### 📺 Display (LCD)
+- Resolution: 240x320 pixels
+- Displays: game board, next tetromino, score, high score, game status
+- Visual effects for line clears and game over
+
+### 🔊 Sound
+- Sound effects for:
+  - Movement, rotation, drop
+  - Line clear, game over, level up
+- Tetris theme music via passive buzzer (PA9, PWM TIM1_CH2)
+- Music toggle available
 
-Team Members:
-Nguyễn Trung Sơn (20225225)
-Nguyễn Quang Huy (20225336)
-Ngân Văn Thiện (20215647)
+### 💾 Data Storage
+- High score stored in flash memory (sector 11)
+
+### ⏱️ Real-Time Operation (FreeRTOS)
+- Separate tasks for:
+  - Game logic
+  - Input polling
+  - GUI rendering
+  - Sound generation
+- Smooth ~30 FPS updates
+- Responsive control handling
 
+---
 
-Instructor: Dr. Ngô Lam Trung
-Platform: STM32F429I-DISCOVERY board
-Development Tools: STM32CubeIDE, TouchGFX
-Hardware: 2.4-inch TFT LCD (ILI9341), passive buzzer (KY-006), tactile buttons
-Objective: Create an interactive Tetris game with intuitive controls, dynamic visuals, and sound effects, showcasing embedded system programming, GUI development, and hardware-software integration.
+## 📦 Hardware Setup
+
+### 🧩 STM32F429I-DISCOVERY Board
+- **MCU**: STM32F429ZIT6 (180 MHz, 2 MB Flash, 256 KB RAM)
+- **LCD**: 2.4" TFT (ILI9341, 240x320) with touch panel
+- **Onboard button**: PA0 (Start/Pause)
+- **SDRAM**: IS42S16400J
 
-✨ Features
-Functional Requirements
+### 🧪 Test Board Components
+- Tactile Buttons:
+  - PG2 – Left
+  - PG3 – Right
+  - PC4 – Rotate
+  - PC5 – Soft drop
+- Passive Buzzer (KY-006):
+  - Signal: PA9 (TIM1_CH2 PWM)
+  - Voltage: 3–5V, Frequency: ~2 kHz
 
-Gameplay Mechanics 🕹️:
-Classic Tetris with a 10x20 grid and seven standard tetromino shapes (I, O, T, S, Z, L, J).
-Random tetromino generation using a "bag" system with hardware RNG.
-Player controls: move left (PG2), move right (PG3), rotate clockwise (PC4), soft drop (PC5), start/pause (PA0 or touch button).
-Game states: play, pause, game over with restart functionality.
+### 🔌 Connections
+- **Buttons**: Connected to GPIO with pull-ups, common GND
+- **Buzzer**: PA9 (signal), 3.3V (VCC), GND
+- **LCD**: SPI5 (5.6 MHz), PC2 (CS), PD13 (DC), I2C3 for touch
+- **SDRAM**: FMC Bank 2 (90 MHz)
 
+---
 
-Input Handling ⌨️:
-Four tactile buttons and one onboard button (PA0) for gameplay controls.
-Touch input on LCD for start/pause functionality.
-Debouncing for reliable button presses.
+## 🧠 Software Architecture
 
+### 🧩 Modules
 
-Display 📺:
-240x320 pixel LCD showing the game grid, current/next tetromino, score, high score, and game status.
-Unique colors for each tetromino type.
-Visual effects for line clears and game over.
+- **Game Logic** (`Screen1View.cpp`):
+  - Handles movement, collision, scoring, line clear
+  - 20x10 grid, each piece as structure
 
+- **GUI** (`Screen1View.cpp`, `Screen1ViewBase.cpp`):
+  - Draws grid, next piece, score, and states
+  - TouchGFX containers and custom visuals
 
-Sound 🔊:
-Sound effects for movement, rotation, drop, line clear, game over, level-up, and soft drop.
-Tetris theme music played via passive buzzer (PA9, PWM TIM1_CH2).
-Toggle music on/off.
+- **Input** (`main.c` – `StartInputTask`):
+  - Button polling every 5 ms with debounce
+  - Sends control signals via FreeRTOS queue
 
+- **Sound** (`main.c` – `StartSoundTask`, `Screen1View.cpp`):
+  - PWM tone generation (200–2000 Hz)
+  - Music toggle control
 
-Data Storage 💾:
-High score saved in flash memory (sector 11).
+- **Tetromino RNG** (`main.c` – `StartGameTask`):
+  - Uses hardware RNG to shuffle tetromino bag
 
+- **High Score** (`Screen1View.cpp`):
+  - Stored in Flash memory (sector 11)
 
-Real-Time Operation ⏱️:
-FreeRTOS tasks manage game logic, input, GUI updates, and sound.
-Smooth gameplay with responsive controls and consistent frame updates.
+- **RTOS Tasks**:
+  - `defaultTask`, `GUI_Task`, `gameTask`, `inputTask`, `soundTask`
+  - Queues: `pieceQueue`, `controlQueue`, `soundQueue`
 
+---
 
+## 🚀 How to Run
 
-Non-Functional Requirements
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/your-username/tetris-stm32.git
+   ```
 
-Reliability 🛡️: Stable operation without crashes during extended play.
-Performance ⚡: ~30 FPS GUI updates, adjustable tetromino drop speed (normal: 30 ticks, soft drop: 3 ticks).
-Hardware Durability 🔧: Secure button and buzzer connections.
-Usability 😊: Intuitive interface with clear visual and auditory feedback.
-Portability 🎒: Compact design within the STM32F429I-DISCOVERY and test board.
-Maintainability 📝: Modular code with clear documentation, adhering to STM32CubeIDE and TouchGFX conventions.
+2. **Open the Project**
+   - Import the project into STM32CubeIDE
+   - Ensure TouchGFX is installed and properly configured
 
-🛠️ Hardware Setup
-Components
+3. **Connect the Hardware**
+   - Wire the buttons and buzzer according to the Hardware Setup section
 
-STM32F429I-DISCOVERY Board:
-MCU: STM32F429ZIT6 (180 MHz, 2 MB Flash, 256 KB SRAM).
-LCD: 2.4-inch TFT (240x320, ILI9341) with touch panel.
-Onboard button: PA0 (start/pause).
-SDRAM: IS42S16400J (64 Mbit).
+4. **Build and Flash**
+   - Build the project using STM32CubeIDE
+   - Flash the firmware to the STM32F429I-DISCOVERY board
 
+5. **Play the Game**
+   - Power on the board
+   - Use the buttons or touchscreen to play
 
-Test Board:
-Four tactile buttons: PG2 (left), PG3 (right), PC4 (rotate), PC5 (soft drop).
-Passive buzzer (KY-006): PA9 (PWM TIM1_CH2), 1.5–2.5 kHz, 3–5V.
+---
 
+## 🎮 Controls
 
+| Action         | Pin/Button       |
+|----------------|------------------|
+| Move Left      | PG2              |
+| Move Right     | PG3              |
+| Rotate         | PC4              |
+| Soft Drop      | PC5              |
+| Start / Pause  | PA0 / Touch      |
 
-Connections
+---
 
-Buttons: Connected to GPIO pins with pull-up resistors (except PA0), sharing a common ground.
-Buzzer: Signal to PA9, VCC to 3.3V, GND to common ground.
-LCD: SPI5 (~5.625 MHz), chip select (PC2), data/command (PD13), touch panel via I2C3 (100 kHz).
-SDRAM: FMC Bank 2 (90 MHz).
+## 🧮 Scoring
 
-💻 Software Architecture
-Modules
+| Lines Cleared | Points |
+|----------------|--------|
+| 1 line         | 100    |
+| 2 lines        | 300    |
+| 3 lines        | 600    |
+| 4 lines        | 1000   |
 
-Game Logic (Screen1View.cpp) 🎲:
-Manages tetromino movement, collision detection, line clearing, and scoring.
-Uses a 20x10 grid array and tetromino structure.
+- 🎵 Background music (Tetris theme) can be toggled on/off  
+- 💾 High score is automatically saved to Flash memory (sector 11)
 
+---
 
-GUI (Screen1ViewBase.cpp, Screen1View.cpp) 🖼️:
-Displays game elements using TouchGFX containers and boxes.
-Handles visual effects and touch input.
+## ✅ Evaluation
 
+- ✅ Full-featured and stable Tetris gameplay  
+- ✅ Responsive and debounced button input  
+- ✅ Smooth GUI rendering (~30 FPS)  
+- ✅ Realistic sound effects and music toggle  
+- ✅ Fair tetromino distribution via hardware RNG  
+- ✅ High score persistence across resets  
 
-Input Handling (main.c: StartInputTask) 🖱️:
-Polls buttons every 5 ms with debouncing, sends control signals via FreeRTOS queue.
+---
 
+## 🔮 Future Improvements
 
-Sound (main.c: StartSoundTask, Screen1View.cpp) 🎵:
-Generates PWM signals (200–2000 Hz) for effects and music.
+- Use DAC or active buzzer for richer sound output  
+- Implement full touch-based controls (swipe/rotate)  
+- Add power-saving mode (e.g., dim screen during pause)  
+- Design a custom PCB to integrate buttons and buzzer more cleanly  
 
+---
 
-Tetromino Generation (main.c: StartGameTask) 🔢:
-Shuffles tetromino bag using hardware RNG.
+## 🙏 Acknowledgments
 
+- Dr. Ngô Lam Trung – for guidance and support  
+- STMicroelectronics – for hardware and development tools  
+- TouchGFX Team – for the GUI framework  
 
-High Score Management (Screen1View.cpp) 🏆:
-Reads/writes high score to flash memory.
-
-
-Task Management (main.c) ⏳:
-FreeRTOS tasks: defaultTask, GUI_Task, gameTask, inputTask, soundTask.
-Queues: pieceQueue, controlQueue, soundQueue.
-
-
-
-Development Tools
-
-STM32CubeIDE: For coding, debugging, and configuring MCU peripherals.
-TouchGFX: For designing and rendering the GUI.
-FreeRTOS: For real-time task scheduling.
-
-🚀 Installation and Setup
-
-Clone the Repository:
-git clone https://github.com/your-username/tetris-stm32.git
-
-
-Open Project:
-
-Import the project into STM32CubeIDE.
-Ensure TouchGFX is installed and configured.
-
-
-Hardware Connections:
-
-Connect buttons and buzzer to the test board as specified.
-Ensure the STM32F429I-DISCOVERY board is powered and connected to the PC.
-
-
-Build and Flash:
-
-Build the project in STM32CubeIDE.
-Flash the firmware to the STM32F429I-DISCOVERY board.
-
-
-Run the Game:
-
-Power on the board.
-Use buttons (PG2, PG3, PC4, PC5, PA0) or touch input to play.
-
-
-
-🎮 Usage
-
-Controls:
-Left (PG2): Move tetromino left ⬅️.
-Right (PG3): Move tetromino right ➡️.
-Rotate (PC4): Rotate tetromino clockwise 🔄.
-Soft Drop (PC5): Speed up tetromino fall ⬇️.
-Start/Pause (PA0 or touch button): Start or pause the game ⏯️.
-
-
-Scoring:
-Clear 1 line: 100 points 🥉.
-Clear 2 lines: 300 points 🥈.
-Clear 3 lines: 600 points 🥇.
-Clear 4 lines: 1000 points 🏅.
-
-
-Music: Toggle background music (Tetris theme) on/off via game logic 🎶.
-High Score: Automatically saved to flash memory 💾.
-
-✅ Evaluation
-
-Achievements:
-Fully functional Tetris gameplay with all required mechanics.
-Responsive input handling with debouncing.
-Smooth GUI at ~30 FPS with clear visual effects.
-Reliable sound effects and toggleable music.
-Fair tetromino distribution via RNG.
-Persistent high score storage.
-
-
-Non-Functional Goals:
-Stable and crash-free operation ✅.
-Durable hardware connections 🔩.
-Intuitive and portable design 🎒.
-Modular and maintainable code 📜.
-
-
-
-🔮 Future Improvements
-
-Replace passive buzzer with active buzzer or DAC for richer audio 🎙️.
-Implement touch-based controls for movement and rotation 👆.
-Add power-saving mode (e.g., dim LCD during pause) 🔋.
-Design a custom PCB for better button and buzzer integration 🛠️.
-
-🙏 Acknowledgments
-
-Dr. Ngô Lam Trung for guidance and support.
-STMicroelectronics for STM32 hardware and tools.
-TouchGFX team for GUI development framework.
