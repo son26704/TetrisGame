@@ -1,5 +1,6 @@
 #include <gui/screen1_screen/Screen1View.hpp>
 #include "main.h"
+#define FLASH_HIGH_SCORE_ADDRESS 0x080E0000
 
 Screen1View::Screen1View()
     : tetrominoContainer(TetrominoContainer),
@@ -69,6 +70,8 @@ Screen1View::Screen1View()
     tetrominoContainers[4] = &tetrominoContainerZ;
     tetrominoContainers[5] = &tetrominoContainerL;
     tetrominoContainers[6] = &tetrominoContainerJ;
+
+    readHighScoreFromFlash();
 }
 
 Screen1View::~Screen1View()
@@ -78,6 +81,8 @@ Screen1View::~Screen1View()
 void Screen1View::setupScreen()
 {
     Screen1ViewBase::setupScreen();
+    Unicode::snprintf(gameOverTextBuffer, GAMEOVERTEXT_SIZE, "HIGH SCORE: %d", highScore);
+    gameOverText.invalidate();
     resetGame();
 }
 
@@ -100,15 +105,29 @@ void Screen1View::buttonClicked()
 void Screen1View::handleTickEvent()
 {
     Screen1ViewBase::handleTickEvent();
-    if (isPaused || isGameOver) return;
+
+    handleControlInput();
+
+    if (isPaused || isGameOver)
+    {
+        if (isGameOverEffect) updateGameOverEffect();
+        return;
+    }
+
+    if (isLineClearEffect)
+    {
+        updateLineClearEffect();
+        return;
+    }
+
+    if (isScoreHighlight)
+    {
+        updateScoreHighlight();
+    }
 
     tickCount++;
 
-    // Xử lý input mỗi tick
-    handleControlInput();
-
     uint32_t dropSpeed = isFastDropping ? 3 : 30;
-
     if (tickCount % dropSpeed == 0)
     {
         if (!checkCollision(currentX, currentY + 1))
@@ -123,7 +142,11 @@ void Screen1View::handleTickEvent()
             tetrominoContainers[pieceIndex]->invalidate();
 
             placePiece();
-            checkAndClearLines();
+            int linesCleared = checkAndClearLines();
+            if (linesCleared > 0)
+            {
+                highlightScore();
+            }
             updateBoardDisplay();
             updateScoreDisplay();
 
@@ -134,6 +157,7 @@ void Screen1View::handleTickEvent()
             if (checkCollision(currentX, currentY))
             {
                 isGameOver = true;
+                startGameOverEffect();
                 updateScoreDisplay();
                 return;
             }
@@ -152,4 +176,500 @@ void Screen1View::handleTickEvent()
             updateNextPieceDisplay();
         }
     }
+}
+
+void Screen1View::handleControlInput()
+{
+    uint8_t controlSignal;
+
+    while (osMessageQueueGet(controlQueueHandle, &controlSignal, NULL, 0) == osOK)
+    {
+        if (controlSignal == 6)
+        {
+            buttonClicked();
+            continue;
+        }
+
+        if (isPaused || isGameOver)
+        {
+            continue;
+        }
+
+        if (controlSignal == 1 && !checkCollision(currentX - 1, currentY))
+        {
+            currentX--;
+            updateCurrentTetrominoUI();
+        }
+        else if (controlSignal == 2 && !checkCollision(currentX + 1, currentY))
+        {
+            currentX++;
+            updateCurrentTetrominoUI();
+        }
+        else if (controlSignal == 3)
+        {
+            rotatePiece();
+        }
+        else if (controlSignal == 4)
+        {
+            isFastDropping = true;
+        }
+        else if (controlSignal == 5)
+        {
+            isFastDropping = false;
+        }
+    }
+}
+
+void Screen1View::placePiece()
+{
+    for (int i = 0; i < 4; i++)
+    {
+        int8_t cellX = currentX + currentPiece.cells[i][0];
+        int8_t cellY = currentY + currentPiece.cells[i][1];
+        if (cellY >= 0 && cellY < 20 && cellX >= 0 && cellX < 10)
+        {
+            board[cellY][cellX] = currentPiece.color;
+        }
+    }
+}
+
+int Screen1View::checkAndClearLines()
+{
+    int linesCleared = 0;
+    int clearedRows[4] = {0};
+
+    for (int row = 19; row >= 0; row--)
+    {
+        bool isFull = true;
+        for (int col = 0; col < 10; col++)
+        {
+            if (board[row][col] == 0)
+            {
+                isFull = false;
+                break;
+            }
+        }
+        if (isFull)
+        {
+            clearedRows[linesCleared] = row;
+            linesCleared++;
+        }
+    }
+
+    int points[] = {0, 100, 300, 600, 1000};
+    if (linesCleared > 0)
+    {
+        score += points[linesCleared];
+        startLineClearEffect(clearedRows, linesCleared);
+    }
+    return linesCleared;
+}
+
+void Screen1View::startLineClearEffect(int rows[], int count)
+{
+    isLineClearEffect = true;
+    lineClearEffectTick = 0;
+    numLinesCleared = count;
+    for (int i = 0; i < count; i++)
+    {
+        lineClearRows[i] = rows[i];
+        for (int col = 0; col < 10; col++)
+        {
+            boardCells[rows[i]][col].setColor(touchgfx::Color::getColorFromRGB(255, 255, 255));
+            boardCells[rows[i]][col].setVisible(true);
+            boardCells[rows[i]][col].invalidate();
+        }
+    }
+}
+
+void Screen1View::updateLineClearEffect()
+{
+    lineClearEffectTick++;
+    if (lineClearEffectTick < 15)
+    {
+        bool visible = (lineClearEffectTick % 3) == 0;
+        for (int i = 0; i < numLinesCleared; i++)
+        {
+            for (int col = 0; col < 10; col++)
+            {
+                boardCells[lineClearRows[i]][col].setVisible(visible);
+                boardCells[lineClearRows[i]][col].invalidate();
+            }
+        }
+    }
+    else
+    {
+        uint8_t newBoard[20][10] = {0};
+        int newRow = 19;
+
+        for (int row = 19; row >= 0; row--)
+        {
+            bool isCleared = false;
+            for (int i = 0; i < numLinesCleared; i++)
+            {
+                if (row == lineClearRows[i])
+                {
+                    isCleared = true;
+                    break;
+                }
+            }
+
+            if (!isCleared)
+            {
+                for (int col = 0; col < 10; col++)
+                {
+                    newBoard[newRow][col] = board[row][col];
+                }
+                newRow--;
+            }
+        }
+
+        for (int row = 0; row < 20; row++)
+        {
+            for (int col = 0; col < 10; col++)
+            {
+                board[row][col] = newBoard[row][col];
+            }
+        }
+
+        isLineClearEffect = false;
+        updateBoardDisplay();
+    }
+}
+
+void Screen1View::startGameOverEffect()
+{
+    isGameOverEffect = true;
+    gameOverEffectTick = 0;
+    for (int row = 0; row < 20; row++)
+    {
+        for (int col = 0; col < 10; col++)
+        {
+            if (board[row][col] != 0)
+            {
+                boardCells[row][col].setColor(touchgfx::Color::getColorFromRGB(255, 0, 0));
+                boardCells[row][col].invalidate();
+            }
+        }
+    }
+}
+
+void Screen1View::updateGameOverEffect()
+{
+    gameOverEffectTick++;
+    if (gameOverEffectTick < 30)
+    {
+        uint8_t red = 255 - (gameOverEffectTick * 8);
+        for (int row = 0; row < 20; row++)
+        {
+            for (int col = 0; col < 10; col++)
+            {
+                if (board[row][col] != 0)
+                {
+                    boardCells[row][col].setColor(touchgfx::Color::getColorFromRGB(red, 0, 0));
+                    boardCells[row][col].invalidate();
+                }
+            }
+        }
+    }
+    else
+    {
+        isGameOverEffect = false;
+        updateBoardDisplay();
+    }
+}
+
+void Screen1View::highlightScore()
+{
+    isScoreHighlight = true;
+    scoreHighlightTick = 0;
+    scoreText.setColor(touchgfx::Color::getColorFromRGB(255, 255, 0));
+    scoreText.invalidate();
+}
+
+void Screen1View::updateScoreHighlight()
+{
+    scoreHighlightTick++;
+    if (scoreHighlightTick >= 10)
+    {
+        isScoreHighlight = false;
+        scoreText.setColor(touchgfx::Color::getColorFromRGB(0, 0, 255));
+        scoreText.invalidate();
+    }
+}
+
+void Screen1View::updateScoreDisplay()
+{
+    if (isGameOver)
+    {
+        Unicode::snprintf(scoreTextBuffer, SCORETEXT_SIZE, "%d", score);
+        if (score > highScore)
+        {
+            writeHighScoreToFlash(score);
+            Unicode::snprintf(gameOverTextBuffer, GAMEOVERTEXT_SIZE, "NEW HIGH SCORE!");
+        }
+        else
+        {
+            Unicode::snprintf(gameOverTextBuffer, GAMEOVERTEXT_SIZE, "GAME OVER");
+        }
+        gameOverText.invalidate();
+    }
+    else
+    {
+        Unicode::snprintf(scoreTextBuffer, SCORETEXT_SIZE, isPaused ? "Paused" : "%d", score);
+        if (score > highScore)
+        {
+            Unicode::snprintf(gameOverTextBuffer, GAMEOVERTEXT_SIZE, "NEW HIGH SCORE!");
+        }
+        else
+        {
+            Unicode::snprintf(gameOverTextBuffer, GAMEOVERTEXT_SIZE, "HIGH SCORE: %d", highScore);
+        }
+        gameOverText.invalidate();
+    }
+    scoreText.invalidate();
+}
+
+void Screen1View::updateNextPieceDisplay()
+{
+    NextTetrominoContainer.setXY(186, 80);
+    for (int i = 0; i < 4; i++)
+    {
+        int8_t relativeX = nextPiece.cells[i][0];
+        int8_t relativeY = nextPiece.cells[i][1];
+        switch (i)
+        {
+            case 0:
+                nextCell1.setXY(relativeX * 12, relativeY * 12);
+                nextCell1.setColor(pieceColors[nextPiece.color]);
+                nextCell1.invalidate();
+                break;
+            case 1:
+                nextCell2.setXY(relativeX * 12, relativeY * 12);
+                nextCell2.setColor(pieceColors[nextPiece.color]);
+                nextCell2.invalidate();
+                break;
+            case 2:
+                nextCell3.setXY(relativeX * 12, relativeY * 12);
+                nextCell3.setColor(pieceColors[nextPiece.color]);
+                nextCell3.invalidate();
+                break;
+            case 3:
+                nextCell4.setXY(relativeX * 12, relativeY * 12);
+                nextCell4.setColor(pieceColors[nextPiece.color]);
+                nextCell4.invalidate();
+                break;
+        }
+    }
+    NextTetrominoContainer.invalidate();
+}
+
+void Screen1View::resetGame()
+{
+    for (int i = 0; i < 7; i++)
+    {
+        tetrominoContainers[i]->setVisible(false);
+        tetrominoContainers[i]->invalidate();
+    }
+
+    for (int row = 0; row < 20; row++)
+    {
+        for (int col = 0; col < 10; col++)
+        {
+            board[row][col] = 0;
+            boardCells[row][col].setVisible(false);
+            boardCells[row][col].invalidate();
+        }
+    }
+    updateBoardDisplay();
+
+    score = 0;
+    isGameOver = false;
+    isPaused = false;
+    isFastDropping = false;
+    isLineClearEffect = false;
+    isGameOverEffect = false;
+    isScoreHighlight = false;
+
+    uint8_t dummy;
+    while (osMessageQueueGet(controlQueueHandle, &dummy, NULL, 0) == osOK) {}
+
+    uint8_t pieceIndex;
+    if (osMessageQueueGet(pieceQueueHandle, &pieceIndex, NULL, 0) == osOK)
+    {
+        currentPiece = tetrominoes[pieceIndex];
+    }
+    else
+    {
+        currentPiece = tetrominoes[0];
+    }
+    currentX = 3;
+    currentY = -1;
+    updateTetrominoDisplay();
+
+    if (osMessageQueueGet(pieceQueueHandle, &pieceIndex, NULL, 0) == osOK)
+    {
+        nextPiece = tetrominoes[pieceIndex];
+    }
+    else
+    {
+        nextPiece = tetrominoes[0];
+    }
+    updateNextPieceDisplay();
+
+    Unicode::snprintf(gameOverTextBuffer, GAMEOVERTEXT_SIZE, "HIGH SCORE: %d", highScore);
+    gameOverText.invalidate();
+
+    updateScoreDisplay();
+    invalidate();
+}
+
+void Screen1View::updateBoardDisplay()
+{
+    for (int row = 0; row < 20; row++)
+    {
+        for (int col = 0; col < 10; col++)
+        {
+            if (board[row][col] == 0)
+            {
+                boardCells[row][col].setVisible(false);
+                boardCells[row][col].invalidate();
+            }
+            else
+            {
+                boardCells[row][col].setVisible(true);
+                boardCells[row][col].setXY(col * 12 + 60, row * 12 + 40);
+                boardCells[row][col].setWidthHeight(12, 12);
+                boardCells[row][col].setColor(pieceColors[board[row][col]]);
+                boardCells[row][col].invalidate();
+            }
+        }
+    }
+}
+
+void Screen1View::updateTetrominoDisplay()
+{
+    for (int i = 0; i < 7; i++)
+    {
+        tetrominoContainers[i]->setVisible(false);
+        tetrominoContainers[i]->invalidate();
+    }
+    updateCurrentTetrominoUI();
+}
+
+bool Screen1View::checkCollision(int8_t newX, int8_t newY)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        int8_t cellX = newX + currentPiece.cells[i][0];
+        int8_t cellY = newY + currentPiece.cells[i][1];
+        if (cellX < 0 || cellX >= 10 || cellY >= 20)
+            return true;
+        if (cellY >= 0 && board[cellY][cellX] != 0)
+            return true;
+    }
+    return false;
+}
+
+void Screen1View::rotatePiece()
+{
+    int8_t originalCells[4][2];
+    for (int i = 0; i < 4; i++)
+    {
+        originalCells[i][0] = currentPiece.cells[i][0];
+        originalCells[i][1] = currentPiece.cells[i][1];
+    }
+
+    for (int i = 0; i < 4; i++)
+    {
+        int8_t x = currentPiece.cells[i][0];
+        int8_t y = currentPiece.cells[i][1];
+        currentPiece.cells[i][0] = -y;
+        currentPiece.cells[i][1] = x;
+    }
+
+    int8_t minX = currentPiece.cells[0][0];
+    int8_t minY = currentPiece.cells[0][1];
+    for (int i = 1; i < 4; i++)
+    {
+        if (currentPiece.cells[i][0] < minX) minX = currentPiece.cells[i][0];
+        if (currentPiece.cells[i][1] < minY) minY = currentPiece.cells[i][1];
+    }
+    for (int i = 0; i < 4; i++)
+    {
+        currentPiece.cells[i][0] -= minX;
+        currentPiece.cells[i][1] -= minY;
+    }
+
+    if (checkCollision(currentX, currentY))
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            currentPiece.cells[i][0] = originalCells[i][0];
+            currentPiece.cells[i][1] = originalCells[i][1];
+        }
+    }
+
+    updateCurrentTetrominoUI();
+}
+
+void Screen1View::updateCurrentTetrominoUI()
+{
+    int pieceIndex = currentPiece.color - 1;
+    Container* cont = tetrominoContainers[pieceIndex];
+
+    Box* boxes[4];
+    switch (pieceIndex)
+    {
+        case 0: boxes[0] = &box1;   boxes[1] = &box2;   boxes[2] = &box3;   boxes[3] = &box4;   break;
+        case 1: boxes[0] = &box1_1; boxes[1] = &box2_1; boxes[2] = &box3_1; boxes[3] = &box4_1; break;
+        case 2: boxes[0] = &box1_2; boxes[1] = &box2_2; boxes[2] = &box3_2; boxes[3] = &box4_2; break;
+        case 3: boxes[0] = &box1_3; boxes[1] = &box2_3; boxes[2] = &box3_3; boxes[3] = &box4_3; break;
+        case 4: boxes[0] = &box1_4; boxes[1] = &box2_4; boxes[2] = &box3_4; boxes[3] = &box4_4; break;
+        case 5: boxes[0] = &box1_5; boxes[1] = &box2_5; boxes[2] = &box3_5; boxes[3] = &box4_5; break;
+        case 6: boxes[0] = &box1_6; boxes[1] = &box2_6; boxes[2] = &box3_6; boxes[3] = &box4_6; break;
+        default: return;
+    }
+
+    for (int i = 0; i < 4; i++)
+    {
+        int16_t cellX = currentPiece.cells[i][0];
+        int16_t cellY = currentPiece.cells[i][1];
+        boxes[i]->setXY(cellX * 12, cellY * 12);
+        boxes[i]->setVisible(true);
+        boxes[i]->invalidate();
+    }
+    cont->setXY(currentX * 12 + 60, currentY * 12 + 40);
+    cont->setVisible(true);
+    cont->invalidate();
+}
+
+void Screen1View::readHighScoreFromFlash()
+{
+    highScore = *(volatile uint32_t*)FLASH_HIGH_SCORE_ADDRESS;
+    if (highScore == 0xFFFFFFFF)
+    {
+        highScore = 0;
+    }
+}
+
+void Screen1View::writeHighScoreToFlash(uint32_t newScore)
+{
+    HAL_FLASH_Unlock();
+    FLASH_EraseInitTypeDef eraseInit = {0};
+    uint32_t sectorError = 0;
+
+    eraseInit.TypeErase = FLASH_TYPEERASE_SECTORS;
+    eraseInit.Sector = FLASH_SECTOR_11;
+    eraseInit.NbSectors = 1;
+    eraseInit.VoltageRange = FLASH_VOLTAGE_RANGE_3;
+
+    if (HAL_FLASHEx_Erase(&eraseInit, §orError) == HAL_OK)
+    {
+        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_HIGH_SCORE_ADDRESS, newScore) == HAL_OK)
+        {
+            highScore = newScore;
+        }
+    }
+    HAL_FLASH_Lock();
 }
