@@ -185,7 +185,7 @@ A classic **Tetris game** implemented on the **STM32F429I-DISCOVERY** board usin
 - ✅ High score persistence across resets  
 
 ---
-##Demo
+## Demo
 - https://drive.google.com/file/d/148uGUMPHRMTenNse1cBFuDzeimCEjjtp/view
 
 ## 🔮 Future Improvements
