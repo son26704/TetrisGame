@@ -8,6 +8,7 @@
 #include <mvp/View.hpp>
 #include <gui/screen1_screen/Screen1Presenter.hpp>
 #include <touchgfx/widgets/Box.hpp>
+#include <touchgfx/widgets/Image.hpp>
 #include <touchgfx/containers/Container.hpp>
 #include <touchgfx/widgets/TextAreaWithWildcard.hpp>
 #include <touchgfx/widgets/TextArea.hpp>
@@ -37,6 +38,7 @@ protected:
      * Member Declarations
      */
     touchgfx::Box __background;
+    touchgfx::Image brickwall;
     touchgfx::Box gameBoard;
     touchgfx::Container TetrominoContainerJ;
     touchgfx::Box box4_6;
@@ -75,6 +77,7 @@ protected:
     touchgfx::Box box1;
     touchgfx::TextAreaWithOneWildcard scoreText;
     touchgfx::TextArea textArea1;
+    touchgfx::TextArea textArea2;
     touchgfx::Box nextPieceBox;
     touchgfx::Container NextTetrominoContainer;
     touchgfx::Box nextCell4;
@@ -82,12 +85,15 @@ protected:
     touchgfx::Box nextCell2;
     touchgfx::Box nextCell1;
     touchgfx::BoxWithBorderButtonStyle< touchgfx::ClickButtonTrigger >  startPauseButton;
+    touchgfx::TextAreaWithOneWildcard gameOverText;
 
     /*
      * Wildcard Buffers
      */
     static const uint16_t SCORETEXT_SIZE = 14;
     touchgfx::Unicode::UnicodeChar scoreTextBuffer[SCORETEXT_SIZE];
+    static const uint16_t GAMEOVERTEXT_SIZE = 25;
+    touchgfx::Unicode::UnicodeChar gameOverTextBuffer[GAMEOVERTEXT_SIZE];
 
 private:
 

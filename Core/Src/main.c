@@ -768,6 +768,9 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12|GPIO_PIN_13, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOG, GPIO_PIN_13|GPIO_PIN_14, GPIO_PIN_RESET);
+
   /*Configure GPIO pins : VSYNC_FREQ_Pin RENDER_TIME_Pin FRAME_RATE_Pin MCU_ACTIVE_Pin */
   GPIO_InitStruct.Pin = VSYNC_FREQ_Pin|RENDER_TIME_Pin|FRAME_RATE_Pin|MCU_ACTIVE_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -789,6 +792,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : BTN_START_PAUSE_Pin */
+  GPIO_InitStruct.Pin = BTN_START_PAUSE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(BTN_START_PAUSE_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pins : BTN_ROTATE_Pin BTN_FAST_DROP_Pin */
   GPIO_InitStruct.Pin = BTN_ROTATE_Pin|BTN_FAST_DROP_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
@@ -808,6 +817,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : PG13 PG14 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_14;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
   /* USER CODE BEGIN MX_GPIO_Init_2 */
   /* USER CODE END MX_GPIO_Init_2 */
 }
@@ -819,6 +835,20 @@ static void MX_GPIO_Init(void)
   * @param  Command: Pointer to SDRAM command structure
   * @retval None
   */
+uint8_t bag[7] = {0,1,2,3,4,5,6};
+uint8_t bagIndex = 0;
+
+void ShuffleBag() {
+  for (int i = 6; i > 0; --i) {
+    uint32_t rand;
+    HAL_RNG_GenerateRandomNumber(&hrng, &rand);
+    int j = rand % (i + 1);
+    uint8_t temp = bag[i];
+    bag[i] = bag[j];
+    bag[j] = temp;
+  }
+}
+
 static void BSP_SDRAM_Initialization_Sequence(SDRAM_HandleTypeDef *hsdram, FMC_SDRAM_CommandTypeDef *Command)
 {
  __IO uint32_t tmpmrd =0;
@@ -1167,15 +1197,17 @@ void StartGameTask(void *argument)
 {
   /* USER CODE BEGIN StartGameTask */
   /* Infinite loop */
-	uint32_t random;
+//	uint32_t random;
+	ShuffleBag();
   for(;;)
   {
-	  if (HAL_RNG_GenerateRandomNumber(&hrng, &random) == HAL_OK)
-	  {
-		  uint8_t pieceIndex = (random % 7); // 0-6 cho 7 loại khối
-		  osMessageQueuePut(pieceQueueHandle, &pieceIndex, 0, 10);
-	  }
-	  osDelay(1); // Sinh số mới mỗi 100ms
+	  if (bagIndex >= 7) {
+	        ShuffleBag();
+	        bagIndex = 0;
+	      }
+	      uint8_t pieceIndex = bag[bagIndex++];
+	      osMessageQueuePut(pieceQueueHandle, &pieceIndex, 0, 10);
+	      osDelay(10);
   }
   /* USER CODE END StartGameTask */
 }
@@ -1195,6 +1227,7 @@ void StartInputTask(void *argument)
 	uint8_t lastRightState = GPIO_PIN_SET; // Trạng thái trước của nút Right
 	uint8_t lastRotateState = GPIO_PIN_SET;   // Trạng thái nút Rotate
 	uint8_t lastFastDropState = GPIO_PIN_SET; // Trạng thái nút Fast Drop
+	uint8_t lastStartPauseState = GPIO_PIN_SET;
   /* Infinite loop */
   for(;;)
   {
@@ -1238,6 +1271,15 @@ void StartInputTask(void *argument)
 		  osMessageQueuePut(controlQueueHandle, &controlSignal, 0, 0);
 	  }
 	  lastFastDropState = fastDropState;
+
+	  // Nút Start/Pause (PA0) - Thêm đoạn mã này
+	  uint8_t startPauseState = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+	  if (startPauseState == GPIO_PIN_RESET && lastStartPauseState == GPIO_PIN_SET)
+	  {
+		  controlSignal = 6; // Tín hiệu 6 để gọi buttonClicked()
+		  osMessageQueuePut(controlQueueHandle, &controlSignal, 0, 0);
+	  }
+	  lastStartPauseState = startPauseState;
 
 	  osDelay(5);
   }

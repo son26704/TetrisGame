@@ -72,6 +72,8 @@ extern osMessageQueueId_t soundQueueHandle;
 #define MCU_ACTIVE_GPIO_Port GPIOE
 #define SPI5_NCS_Pin GPIO_PIN_1
 #define SPI5_NCS_GPIO_Port GPIOC
+#define BTN_START_PAUSE_Pin GPIO_PIN_0
+#define BTN_START_PAUSE_GPIO_Port GPIOA
 #define BTN_ROTATE_Pin GPIO_PIN_4
 #define BTN_ROTATE_GPIO_Port GPIOC
 #define BTN_FAST_DROP_Pin GPIO_PIN_5

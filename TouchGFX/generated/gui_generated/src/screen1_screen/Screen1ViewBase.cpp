@@ -3,6 +3,7 @@
 /*********************************************************************************/
 #include <gui_generated/screen1_screen/Screen1ViewBase.hpp>
 #include <touchgfx/Color.hpp>
+#include <images/BitmapDatabase.hpp>
 #include <texts/TextKeysAndLanguages.hpp>
 
 Screen1ViewBase::Screen1ViewBase() :
@@ -11,6 +12,10 @@ Screen1ViewBase::Screen1ViewBase() :
     __background.setPosition(0, 0, 240, 320);
     __background.setColor(touchgfx::Color::getColorFromRGB(0, 0, 0));
     add(__background);
+
+    brickwall.setXY(0, 0);
+    brickwall.setBitmap(touchgfx::Bitmap(BITMAP_BRICKWALL_ID));
+    add(brickwall);
 
     gameBoard.setPosition(60, 40, 120, 240);
     gameBoard.setColor(touchgfx::Color::getColorFromRGB(128, 128, 128));
@@ -149,7 +154,7 @@ Screen1ViewBase::Screen1ViewBase() :
 
     add(TetrominoContainer);
 
-    scoreText.setPosition(180, 40, 60, 30);
+    scoreText.setPosition(180, 36, 60, 30);
     scoreText.setColor(touchgfx::Color::getColorFromRGB(0, 0, 255));
     scoreText.setLinespacing(0);
     scoreTextBuffer[0] = 0;
@@ -157,11 +162,17 @@ Screen1ViewBase::Screen1ViewBase() :
     scoreText.setTypedText(touchgfx::TypedText(T___SINGLEUSE_BZ3D));
     add(scoreText);
 
-    textArea1.setPosition(180, 20, 60, 20);
+    textArea1.setPosition(180, 18, 60, 20);
     textArea1.setColor(touchgfx::Color::getColorFromRGB(0, 0, 255));
     textArea1.setLinespacing(0);
     textArea1.setTypedText(touchgfx::TypedText(T___SINGLEUSE_UYAG));
     add(textArea1);
+
+    textArea2.setPosition(180, 65, 60, 15);
+    textArea2.setColor(touchgfx::Color::getColorFromRGB(255, 255, 255));
+    textArea2.setLinespacing(0);
+    textArea2.setTypedText(touchgfx::TypedText(T___SINGLEUSE_S4HN));
+    add(textArea2);
 
     nextPieceBox.setPosition(180, 80, 48, 48);
     nextPieceBox.setColor(touchgfx::Color::getColorFromRGB(64, 64, 64));
@@ -192,6 +203,14 @@ Screen1ViewBase::Screen1ViewBase() :
     startPauseButton.setAction(flexButtonCallback);
     startPauseButton.setPosition(180, 199, 60, 30);
     add(startPauseButton);
+
+    gameOverText.setPosition(40, 280, 180, 20);
+    gameOverText.setColor(touchgfx::Color::getColorFromRGB(255, 0, 0));
+    gameOverText.setLinespacing(0);
+    gameOverTextBuffer[0] = 0;
+    gameOverText.setWildcard(gameOverTextBuffer);
+    gameOverText.setTypedText(touchgfx::TypedText(T___SINGLEUSE_EA3Q));
+    add(gameOverText);
 }
 
 Screen1ViewBase::~Screen1ViewBase()
