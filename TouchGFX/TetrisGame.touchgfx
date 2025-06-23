@@ -6,62 +6,20 @@
         "Components": [
           {
             "Type": "Image",
-            "Name": "image1",
+            "Name": "home",
             "Width": 240,
-            "Height": 354,
-            "RelativeFilename": "Screenshot 2025-06-03 204508.png"
+            "Height": 320,
+            "RelativeFilename": "home.png"
           },
           {
-            "Type": "FlexButton",
-            "Name": "flexButton1",
-            "X": 55,
-            "Y": 258,
-            "Width": 131,
-            "Height": 23,
-            "ButtonTrigger": {
-              "Type": "ClickButtonTrigger"
-            },
-            "ButtonStyles": [
-              {
-                "Type": "TextButtonStyle",
-                "TextId": "__SingleUse_JFKQ",
-                "TextRotation": "0",
-                "ColorReleased": {
-                  "Red": 255,
-                  "Green": 255,
-                  "Blue": 255
-                },
-                "ColorPressed": {
-                  "Red": 10,
-                  "Green": 10,
-                  "Blue": 10
-                }
-              },
-              {
-                "Type": "BoxWithBorderButtonStyle",
-                "Width": 131,
-                "Height": 23,
-                "LockToFlexButtonSize": true,
-                "BorderSize": 5,
-                "ColorReleased": {
-                  "Green": 102,
-                  "Blue": 153
-                },
-                "ColorPressed": {
-                  "Green": 153,
-                  "Blue": 204
-                },
-                "ColorBorderReleased": {
-                  "Green": 51,
-                  "Blue": 102
-                },
-                "ColorBorderPressed": {
-                  "Red": 51,
-                  "Green": 102,
-                  "Blue": 153
-                }
-              }
-            ]
+            "Type": "Button",
+            "Name": "startButton",
+            "X": 30,
+            "Y": 169,
+            "Width": 180,
+            "Height": 180,
+            "Pressed": "Startbutton.png",
+            "Released": "Startbutton.png"
           }
         ],
         "Interactions": [
@@ -69,11 +27,12 @@
             "InteractionName": "Interaction1",
             "Trigger": {
               "Type": "TriggerClicked",
-              "TriggerComponent": "flexButton1"
+              "TriggerComponent": "startButton"
             },
             "Action": {
               "Type": "ActionGotoScreen",
-              "ScreenTransitionType": "ScreenTransitionNone",
+              "ScreenTransitionType": "ScreenTransitionCover",
+              "ScreenTransitionDirection": "East",
               "ActionComponent": "Screen1"
             }
           }
@@ -82,6 +41,13 @@
       {
         "Name": "Screen1",
         "Components": [
+          {
+            "Type": "Image",
+            "Name": "brickwall",
+            "Width": 240,
+            "Height": 320,
+            "RelativeFilename": "brickwall.png"
+          },
           {
             "Type": "Box",
             "Name": "gameBoard",
@@ -468,7 +434,7 @@
             "Type": "TextArea",
             "Name": "scoreText",
             "X": 180,
-            "Y": 40,
+            "Y": 36,
             "Width": 60,
             "Height": 30,
             "TextId": "__SingleUse_BZ3D",
@@ -485,12 +451,27 @@
             "Type": "TextArea",
             "Name": "textArea1",
             "X": 180,
-            "Y": 20,
+            "Y": 18,
             "Width": 60,
             "Height": 20,
             "TextId": "__SingleUse_UYAG",
             "TextRotation": "0",
             "Color": {
+              "Blue": 255
+            }
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textArea2",
+            "X": 180,
+            "Y": 65,
+            "Width": 60,
+            "Height": 15,
+            "TextId": "__SingleUse_S4HN",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
               "Blue": 255
             }
           },
@@ -590,6 +571,23 @@
                 }
               }
             ]
+          },
+          {
+            "Type": "TextArea",
+            "Name": "gameOverText",
+            "X": 40,
+            "Y": 280,
+            "Width": 180,
+            "Height": 20,
+            "TextId": "__SingleUse_EA3Q",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255
+            },
+            "Wildcard1": {
+              "UseBuffer": true,
+              "BufferSize": 25
+            }
           }
         ],
         "Interactions": [
@@ -614,7 +612,7 @@
       "Height": 320
     },
     "SelectedColorDepth": 16,
-    "StartupScreenName": "Screen1",
+    "StartupScreenName": "Screen0",
     "SelectedStartupLanguage": "GB",
     "TouchGfxPath": "../Middlewares/ST/touchgfx",
     "UIPath": ".",

@@ -4,28 +4,22 @@
 #include <gui_generated/screen0_screen/Screen0ViewBase.hpp>
 #include <touchgfx/Color.hpp>
 #include <images/BitmapDatabase.hpp>
-#include <texts/TextKeysAndLanguages.hpp>
 
 Screen0ViewBase::Screen0ViewBase() :
-    flexButtonCallback(this, &Screen0ViewBase::flexButtonCallbackHandler)
+    buttonCallback(this, &Screen0ViewBase::buttonCallbackHandler)
 {
     __background.setPosition(0, 0, 240, 320);
     __background.setColor(touchgfx::Color::getColorFromRGB(0, 0, 0));
     add(__background);
 
-    image1.setXY(0, 0);
-    image1.setBitmap(touchgfx::Bitmap(BITMAP_SCREENSHOT_2025_06_03_204508_ID));
-    add(image1);
+    home.setXY(0, 0);
+    home.setBitmap(touchgfx::Bitmap(BITMAP_HOME_ID));
+    add(home);
 
-    flexButton1.setBoxWithBorderPosition(0, 0, 131, 23);
-    flexButton1.setBorderSize(5);
-    flexButton1.setBoxWithBorderColors(touchgfx::Color::getColorFromRGB(0, 102, 153), touchgfx::Color::getColorFromRGB(0, 153, 204), touchgfx::Color::getColorFromRGB(0, 51, 102), touchgfx::Color::getColorFromRGB(51, 102, 153));
-    flexButton1.setText(TypedText(T___SINGLEUSE_JFKQ));
-    flexButton1.setTextPosition(0, 0, 131, 23);
-    flexButton1.setTextColors(touchgfx::Color::getColorFromRGB(255, 255, 255), touchgfx::Color::getColorFromRGB(10, 10, 10));
-    flexButton1.setAction(flexButtonCallback);
-    flexButton1.setPosition(55, 258, 131, 23);
-    add(flexButton1);
+    startButton.setXY(30, 169);
+    startButton.setBitmaps(touchgfx::Bitmap(BITMAP_STARTBUTTON_ID), touchgfx::Bitmap(BITMAP_STARTBUTTON_ID));
+    startButton.setAction(buttonCallback);
+    add(startButton);
 }
 
 Screen0ViewBase::~Screen0ViewBase()
@@ -38,13 +32,13 @@ void Screen0ViewBase::setupScreen()
 
 }
 
-void Screen0ViewBase::flexButtonCallbackHandler(const touchgfx::AbstractButtonContainer& src)
+void Screen0ViewBase::buttonCallbackHandler(const touchgfx::AbstractButton& src)
 {
-    if (&src == &flexButton1)
+    if (&src == &startButton)
     {
         //Interaction1
-        //When flexButton1 clicked change screen to Screen1
-        //Go to Screen1 with no screen transition
-        application().gotoScreen1ScreenNoTransition();
+        //When startButton clicked change screen to Screen1
+        //Go to Screen1 with screen transition towards East
+        application().gotoScreen1ScreenCoverTransitionEast();
     }
 }

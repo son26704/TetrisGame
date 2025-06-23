@@ -1,0 +1,5 @@
+../../TouchGFX/gui/include/gui/screen0_screen/Screen0Presenter.hpp:28:13:Screen0Presenter::~Screen0Presenter()	0	static
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen0_screen/Screen0Presenter.cpp:10:6:virtual void Screen0Presenter::activate()	0	static
+../../TouchGFX/gui/include/gui/screen0_screen/Screen0Presenter.hpp:28:13:virtual Screen0Presenter::~Screen0Presenter()	8	static
+../../TouchGFX/gui/include/gui/screen0_screen/Screen0Presenter.hpp:28:13:virtual void* Screen0Presenter::_ZThn4_N16Screen0PresenterD1Ev()	0	static
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen0_screen/Screen0Presenter.cpp:4:1:Screen0Presenter::Screen0Presenter(Screen0View&)	0	static

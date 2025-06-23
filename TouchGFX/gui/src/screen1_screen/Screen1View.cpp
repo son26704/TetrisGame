@@ -2,6 +2,16 @@
 #include "main.h"
 #define FLASH_HIGH_SCORE_ADDRESS 0x080E0000
 
+const Screen1View::MusicNote Screen1View::tetrisTheme[32] = {
+    {NOTE_E5, 200}, {NOTE_B4, 100}, {NOTE_C5, 100}, {NOTE_D5, 200}, {NOTE_C5, 100}, {NOTE_B4, 100},
+    {NOTE_A4, 200}, {NOTE_A4, 100}, {NOTE_C5, 100}, {NOTE_E5, 200}, {NOTE_D5, 100}, {NOTE_C5, 100},
+    {NOTE_B4, 300}, {NOTE_C5, 100}, {NOTE_D5, 200}, {NOTE_E5, 200},
+    {NOTE_C5, 200}, {NOTE_A4, 200}, {NOTE_A4, 400},
+    {NOTE_D5, 200}, {NOTE_F5, 100}, {NOTE_A5, 200}, {NOTE_G5, 100}, {NOTE_F5, 100},
+    {NOTE_E5, 300}, {NOTE_C5, 100}, {NOTE_E5, 200}, {NOTE_D5, 100}, {NOTE_C5, 100},
+    {NOTE_B4, 200}, {NOTE_B4, 100}, {NOTE_C5, 100}
+};
+
 Screen1View::Screen1View()
     : tetrominoContainer(TetrominoContainer),
       tetrominoContainerO(TetrominoContainerO),
@@ -10,47 +20,40 @@ Screen1View::Screen1View()
       tetrominoContainerZ(TetrominoContainerZ),
       tetrominoContainerL(TetrominoContainerL),
       tetrominoContainerJ(TetrominoContainerJ),
-      // Khởi tạo box con trong TetrominoContainer (I)
       box1(*static_cast<Box*>(TetrominoContainer.getFirstChild())),
       box2(*static_cast<Box*>(box1.getNextSibling())),
       box3(*static_cast<Box*>(box2.getNextSibling())),
       box4(*static_cast<Box*>(box3.getNextSibling())),
-      // TetrominoContainerO (O)
       box1_1(*static_cast<Box*>(TetrominoContainerO.getFirstChild())),
       box2_1(*static_cast<Box*>(box1_1.getNextSibling())),
       box3_1(*static_cast<Box*>(box2_1.getNextSibling())),
       box4_1(*static_cast<Box*>(box3_1.getNextSibling())),
-      // TetrominoContainerT (T)
       box1_2(*static_cast<Box*>(TetrominoContainerT.getFirstChild())),
       box2_2(*static_cast<Box*>(box1_2.getNextSibling())),
       box3_2(*static_cast<Box*>(box2_2.getNextSibling())),
       box4_2(*static_cast<Box*>(box3_2.getNextSibling())),
-      // TetrominoContainerS (S)
       box1_3(*static_cast<Box*>(TetrominoContainerS.getFirstChild())),
       box2_3(*static_cast<Box*>(box1_3.getNextSibling())),
       box3_3(*static_cast<Box*>(box2_3.getNextSibling())),
       box4_3(*static_cast<Box*>(box3_3.getNextSibling())),
-      // TetrominoContainerZ (Z)
       box1_4(*static_cast<Box*>(TetrominoContainerZ.getFirstChild())),
       box2_4(*static_cast<Box*>(box1_4.getNextSibling())),
       box3_4(*static_cast<Box*>(box2_4.getNextSibling())),
       box4_4(*static_cast<Box*>(box3_4.getNextSibling())),
-      // TetrominoContainerL (L)
       box1_5(*static_cast<Box*>(TetrominoContainerL.getFirstChild())),
       box2_5(*static_cast<Box*>(box1_5.getNextSibling())),
       box3_5(*static_cast<Box*>(box2_5.getNextSibling())),
       box4_5(*static_cast<Box*>(box3_5.getNextSibling())),
-      // TetrominoContainerJ (J)
       box1_6(*static_cast<Box*>(TetrominoContainerJ.getFirstChild())),
       box2_6(*static_cast<Box*>(box1_6.getNextSibling())),
       box3_6(*static_cast<Box*>(box2_6.getNextSibling())),
       box4_6(*static_cast<Box*>(box3_6.getNextSibling())),
-      // NextTetrominoContainer
       nextTetrominoContainer(NextTetrominoContainer),
       nextCell1(*static_cast<Box*>(NextTetrominoContainer.getFirstChild())),
       nextCell2(*static_cast<Box*>(nextCell1.getNextSibling())),
       nextCell3(*static_cast<Box*>(nextCell2.getNextSibling())),
-      nextCell4(*static_cast<Box*>(nextCell3.getNextSibling()))
+      nextCell4(*static_cast<Box*>(nextCell3.getNextSibling())),
+      gameOverText(Screen1ViewBase::gameOverText)
 {
     for (int row = 0; row < 20; row++)
     {
@@ -105,6 +108,11 @@ void Screen1View::buttonClicked()
 void Screen1View::handleTickEvent()
 {
     Screen1ViewBase::handleTickEvent();
+
+    if (!isPaused && !isGameOver)
+    {
+        playBackgroundMusic();
+    }
 
     handleControlInput();
 
@@ -199,19 +207,23 @@ void Screen1View::handleControlInput()
         {
             currentX--;
             updateCurrentTetrominoUI();
+            playMoveSound();
         }
         else if (controlSignal == 2 && !checkCollision(currentX + 1, currentY))
         {
             currentX++;
             updateCurrentTetrominoUI();
+            playMoveSound();
         }
         else if (controlSignal == 3)
         {
             rotatePiece();
+            playRotateSound();
         }
         else if (controlSignal == 4)
         {
             isFastDropping = true;
+            playFastDropSound();
         }
         else if (controlSignal == 5)
         {
@@ -231,6 +243,7 @@ void Screen1View::placePiece()
             board[cellY][cellX] = currentPiece.color;
         }
     }
+    playDropSound();
 }
 
 int Screen1View::checkAndClearLines()
@@ -261,9 +274,18 @@ int Screen1View::checkAndClearLines()
     {
         score += points[linesCleared];
         startLineClearEffect(clearedRows, linesCleared);
+        if (linesCleared >= 4)
+        {
+            playLevelUpSound();
+        }
+        else
+        {
+            playLineClearSound();
+        }
     }
     return linesCleared;
 }
+
 
 void Screen1View::startLineClearEffect(int rows[], int count)
 {
@@ -299,9 +321,11 @@ void Screen1View::updateLineClearEffect()
     }
     else
     {
+        // Tạo một bảng tạm mới và chỉ copy lại các hàng không bị xóa
         uint8_t newBoard[20][10] = {0};
         int newRow = 19;
 
+        // Duyệt từ dưới lên
         for (int row = 19; row >= 0; row--)
         {
             bool isCleared = false;
@@ -324,6 +348,7 @@ void Screen1View::updateLineClearEffect()
             }
         }
 
+        // Gán lại
         for (int row = 0; row < 20; row++)
         {
             for (int col = 0; col < 10; col++)
@@ -336,6 +361,7 @@ void Screen1View::updateLineClearEffect()
         updateBoardDisplay();
     }
 }
+
 
 void Screen1View::startGameOverEffect()
 {
@@ -413,6 +439,7 @@ void Screen1View::updateScoreDisplay()
             Unicode::snprintf(gameOverTextBuffer, GAMEOVERTEXT_SIZE, "GAME OVER");
         }
         gameOverText.invalidate();
+        playGameOverSound();
     }
     else
     {
@@ -490,6 +517,10 @@ void Screen1View::resetGame()
     isLineClearEffect = false;
     isGameOverEffect = false;
     isScoreHighlight = false;
+
+    currentMelodyIndex = 0;
+    musicTick = 0;
+    backgroundMusicEnabled = true;
 
     uint8_t dummy;
     while (osMessageQueueGet(controlQueueHandle, &dummy, NULL, 0) == osOK) {}
@@ -664,7 +695,7 @@ void Screen1View::writeHighScoreToFlash(uint32_t newScore)
     eraseInit.NbSectors = 1;
     eraseInit.VoltageRange = FLASH_VOLTAGE_RANGE_3;
 
-    if (HAL_FLASHEx_Erase(&eraseInit, §orError) == HAL_OK)
+    if (HAL_FLASHEx_Erase(&eraseInit, &sectorError) == HAL_OK)
     {
         if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, FLASH_HIGH_SCORE_ADDRESS, newScore) == HAL_OK)
         {
@@ -672,4 +703,94 @@ void Screen1View::writeHighScoreToFlash(uint32_t newScore)
         }
     }
     HAL_FLASH_Lock();
+}
+
+void Screen1View::playSound(uint8_t frequency, uint16_t duration)
+{
+    uint16_t soundData = (frequency << 8) | (duration & 0xFF);
+    osMessageQueuePut(soundQueueHandle, &soundData, 0, 0);
+}
+
+void Screen1View::stopSound()
+{
+    uint16_t soundData = 0;
+    osMessageQueuePut(soundQueueHandle, &soundData, 0, 0);
+}
+
+void Screen1View::playMoveSound()
+{
+    playSound(NOTE_C4, 50);
+}
+
+void Screen1View::playRotateSound()
+{
+    playSound(NOTE_E4, 80);
+}
+
+void Screen1View::playDropSound()
+{
+    playSound(NOTE_G4, 60);
+}
+
+void Screen1View::playLineClearSound()
+{
+    playSound(NOTE_C5, 100);
+    osDelay(50);
+    playSound(NOTE_E5, 100);
+    osDelay(50);
+    playSound(NOTE_G5, 150);
+}
+
+void Screen1View::playGameOverSound()
+{
+    playSound(NOTE_C6, 200);
+    osDelay(100);
+    playSound(NOTE_A5, 200);
+    osDelay(100);
+    playSound(NOTE_F5, 200);
+    osDelay(100);
+    playSound(NOTE_C5, 400);
+}
+
+void Screen1View::playLevelUpSound()
+{
+    playSound(NOTE_C4, 100);
+    osDelay(50);
+    playSound(NOTE_E4, 100);
+    osDelay(50);
+    playSound(NOTE_G4, 100);
+    osDelay(50);
+    playSound(NOTE_C5, 200);
+}
+
+void Screen1View::playFastDropSound()
+{
+    playSound(NOTE_A4, 30);
+}
+
+void Screen1View::playBackgroundMusic()
+{
+    if (!backgroundMusicEnabled) return;
+
+    musicTick++;
+    if (musicTick % 60 == 0)
+    {
+        MusicNote note = tetrisTheme[currentMelodyIndex];
+        playSound(note.frequency, note.duration);
+
+        currentMelodyIndex++;
+        if (currentMelodyIndex >= 32)
+        {
+            currentMelodyIndex = 0;
+        }
+    }
+}
+
+void Screen1View::toggleBackgroundMusic()
+{
+    backgroundMusicEnabled = !backgroundMusicEnabled;
+    if (!backgroundMusicEnabled)
+    {
+        stopSound();
+    }
 }

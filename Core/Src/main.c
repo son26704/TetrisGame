@@ -107,7 +107,13 @@ const osThreadAttr_t inputTask_attributes = {
   .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityAboveNormal,
 };
-
+/* Definitions for soundTask */
+osThreadId_t soundTaskHandle;
+const osThreadAttr_t soundTask_attributes = {
+  .name = "soundTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* Definitions for pieceQueue */
 osMessageQueueId_t pieceQueueHandle;
 const osMessageQueueAttr_t pieceQueue_attributes = {
@@ -117,14 +123,18 @@ const osMessageQueueAttr_t pieceQueue_attributes = {
 uint8_t isRevD = 0; /* Applicable only for STM32F429I DISCOVERY REVD and above */
 RNG_HandleTypeDef hrng;
 extern osMessageQueueId_t pieceQueueHandle;
-
-
 extern osMessageQueueId_t controlQueueHandle;
+extern osMessageQueueId_t soundQueueHandle;
+
 osMessageQueueId_t controlQueueHandle;
 const osMessageQueueAttr_t controlQueue_attributes = {
 		.name = "controlQueue"
 };
 
+osMessageQueueId_t soundQueueHandle;
+const osMessageQueueAttr_t soundQueue_attributes = {
+		.name = "soundQueue"
+};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -142,6 +152,7 @@ void StartDefaultTask(void *argument);
 extern void TouchGFX_Task(void *argument);
 void StartGameTask(void *argument);
 void StartInputTask(void *argument);
+void StartSoundTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 static void BSP_SDRAM_Initialization_Sequence(SDRAM_HandleTypeDef *hsdram, FMC_SDRAM_CommandTypeDef *Command);
@@ -254,6 +265,7 @@ int main(void)
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   controlQueueHandle = osMessageQueueNew(16, sizeof(uint8_t), &controlQueue_attributes);
+  soundQueueHandle = osMessageQueueNew(8, sizeof(uint16_t), &soundQueue_attributes);
   // Khởi động PWM trên TIM1_CH2 (PA9)
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   /* USER CODE END RTOS_QUEUES */
@@ -271,6 +283,8 @@ int main(void)
   /* creation of inputTask */
   inputTaskHandle = osThreadNew(StartInputTask, NULL, &inputTask_attributes);
 
+  /* creation of soundTask */
+  soundTaskHandle = osThreadNew(StartSoundTask, NULL, &soundTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -491,6 +505,7 @@ static void MX_LTDC_Init(void)
   }
   pLayerCfg.WindowX0 = 0;
   pLayerCfg.WindowX1 = 240;
+  pLayerCfg.WindowY0 = 0;
   pLayerCfg.WindowY1 = 320;
   pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
   pLayerCfg.Alpha = 255;
@@ -820,6 +835,19 @@ static void MX_GPIO_Init(void)
   * @param  Command: Pointer to SDRAM command structure
   * @retval None
   */
+uint8_t bag[7] = {0,1,2,3,4,5,6};
+uint8_t bagIndex = 0;
+
+void ShuffleBag() {
+  for (int i = 6; i > 0; --i) {
+    uint32_t rand;
+    HAL_RNG_GenerateRandomNumber(&hrng, &rand);
+    int j = rand % (i + 1);
+    uint8_t temp = bag[i];
+    bag[i] = bag[j];
+    bag[j] = temp;
+  }
+}
 
 static void BSP_SDRAM_Initialization_Sequence(SDRAM_HandleTypeDef *hsdram, FMC_SDRAM_CommandTypeDef *Command)
 {
@@ -1169,15 +1197,17 @@ void StartGameTask(void *argument)
 {
   /* USER CODE BEGIN StartGameTask */
   /* Infinite loop */
-	uint32_t random;
+//	uint32_t random;
+	ShuffleBag();
   for(;;)
   {
-	  if (HAL_RNG_GenerateRandomNumber(&hrng, &random) == HAL_OK)
-	  {
-		  uint8_t pieceIndex = (random % 7); // 0-6 cho 7 loại khối
-		  osMessageQueuePut(pieceQueueHandle, &pieceIndex, 0, 10);
-	  }
-	  osDelay(10);
+	  if (bagIndex >= 7) {
+	        ShuffleBag();
+	        bagIndex = 0;
+	      }
+	      uint8_t pieceIndex = bag[bagIndex++];
+	      osMessageQueuePut(pieceQueueHandle, &pieceIndex, 0, 10);
+	      osDelay(10);
   }
   /* USER CODE END StartGameTask */
 }
@@ -1242,11 +1272,11 @@ void StartInputTask(void *argument)
 	  }
 	  lastFastDropState = fastDropState;
 
-	  // Nút Start/Pause (PA0)
+	  // Nút Start/Pause (PA0) - Thêm đoạn mã này
 	  uint8_t startPauseState = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
 	  if (startPauseState == GPIO_PIN_RESET && lastStartPauseState == GPIO_PIN_SET)
 	  {
-		  controlSignal = 6;
+		  controlSignal = 6; // Tín hiệu 6 để gọi buttonClicked()
 		  osMessageQueuePut(controlQueueHandle, &controlSignal, 0, 0);
 	  }
 	  lastStartPauseState = startPauseState;
@@ -1257,7 +1287,57 @@ void StartInputTask(void *argument)
 }
 
 /* USER CODE BEGIN Header_StartSoundTask */
+/**
+* @brief Function implementing the soundTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartSoundTask */
+void StartSoundTask(void *argument)
+{
+  /* USER CODE BEGIN StartSoundTask */
+	uint16_t soundData;
+  /* Infinite loop */
+	for(;;)
+	{
+		if (osMessageQueueGet(soundQueueHandle, &soundData, NULL, osWaitForever) == osOK)
+		{
+			uint16_t frequency = (soundData >> 8) & 0xFF; // Tần số (100-400 Hz cho 8-bit retro)
+			uint16_t duration = soundData & 0xFF;         // Thời gian phát (ms)
 
+			if (frequency == 0) // Lệnh dừng âm thanh
+			{
+				HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_2);
+				continue;
+			}
+
+			// Chuyển đổi frequency từ 0-255 về Hz thực (200-2000 Hz)
+			uint32_t realFreq = 200 + (frequency * 1800 / 255);
+
+			// Tính toán giá trị ARR để đạt tần số mong muốn
+			// Clock Timer = 1 MHz (Prescaler = 83, Clock hệ thống = 84 MHz)
+			uint32_t arr = (1000000 / realFreq) - 1;
+
+			// Đảm bảo ARR không vượt quá 16-bit
+			if (arr > 65535) arr = 65535;
+
+			__HAL_TIM_SET_AUTORELOAD(&htim1, arr);
+			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, arr / 2); // Duty cycle 50%
+
+			// Bắt đầu PWM
+			HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+
+			// Phát âm thanh trong thời gian duration
+			osDelay(duration);
+
+			// Tắt âm thanh
+			HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_2);
+
+			// Nghỉ ngắn giữa các âm thanh để tránh tiếng ồn
+			osDelay(10);
+		}
+	}
+  /* USER CODE END StartSoundTask */
 }
 
 /**

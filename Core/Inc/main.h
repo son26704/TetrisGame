@@ -50,12 +50,15 @@ extern "C" {
 
 /* USER CODE END EM */
 
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 extern osMessageQueueId_t pieceQueueHandle;
 extern osMessageQueueId_t controlQueueHandle;
+extern osMessageQueueId_t soundQueueHandle;
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -69,6 +72,8 @@ extern osMessageQueueId_t controlQueueHandle;
 #define MCU_ACTIVE_GPIO_Port GPIOE
 #define SPI5_NCS_Pin GPIO_PIN_1
 #define SPI5_NCS_GPIO_Port GPIOC
+#define BTN_START_PAUSE_Pin GPIO_PIN_0
+#define BTN_START_PAUSE_GPIO_Port GPIOA
 #define BTN_ROTATE_Pin GPIO_PIN_4
 #define BTN_ROTATE_GPIO_Port GPIOC
 #define BTN_FAST_DROP_Pin GPIO_PIN_5

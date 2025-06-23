@@ -94,6 +94,46 @@ private:
     bool isScoreHighlight = false;
     uint32_t scoreHighlightTick = 0;
 
+    // Sound definitions
+    static const uint8_t NOTE_C4 = 50;
+    static const uint8_t NOTE_D4 = 60;
+    static const uint8_t NOTE_E4 = 70;
+    static const uint8_t NOTE_F4 = 75;
+    static const uint8_t NOTE_G4 = 85;
+    static const uint8_t NOTE_A4 = 95;
+    static const uint8_t NOTE_B4 = 105;
+    static const uint8_t NOTE_C5 = 110;
+    static const uint8_t NOTE_D5 = 120;
+    static const uint8_t NOTE_E5 = 130;
+    static const uint8_t NOTE_F5 = 135;
+    static const uint8_t NOTE_G5 = 145;
+    static const uint8_t NOTE_A5 = 155;
+    static const uint8_t NOTE_B5 = 165;
+    static const uint8_t NOTE_C6 = 175;
+
+    bool backgroundMusicEnabled = true;
+    uint8_t currentMelodyIndex = 0;
+    uint32_t musicTick = 0;
+
+    struct MusicNote {
+        uint8_t frequency;
+        uint16_t duration;
+    };
+
+    static const MusicNote tetrisTheme[32];
+
+    void playSound(uint8_t frequency, uint16_t duration);
+    void stopSound();
+    void playMoveSound();
+    void playRotateSound();
+    void playDropSound();
+    void playLineClearSound();
+    void playGameOverSound();
+    void playLevelUpSound();
+    void playFastDropSound();
+    void playBackgroundMusic();
+    void toggleBackgroundMusic();
+
     bool checkCollision(int8_t newX, int8_t newY);
     void placePiece();
     void updateBoardDisplay();

@@ -12,23 +12,46 @@
 ../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:703:18:virtual void touchgfx::Drawable::setupDrawChain(const touchgfx::Rect&, touchgfx::Drawable**)	1
 ../../Middlewares/ST/touchgfx/framework/include/touchgfx/Screen.hpp:104:18:virtual void touchgfx::Screen::afterTransition()	1
 ../../Middlewares/ST/touchgfx/framework/include/touchgfx/Screen.hpp:154:18:virtual void touchgfx::Screen::handleKeyEvent(uint8_t)	1
-C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:84:6:virtual void Screen1View::tearDownScreen()	1
-C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:74:1:Screen1View::~Screen1View()	2
-C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:74:1:virtual Screen1View::~Screen1View()	1
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:92:6:virtual void Screen1View::tearDownScreen()	1
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:80:1:Screen1View::~Screen1View()	2
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:80:1:virtual Screen1View::~Screen1View()	1
 ../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:121:18:virtual void touchgfx::Drawable::invalidateContent() const	2
 ../../Middlewares/ST/touchgfx/framework/include/touchgfx/widgets/Widget.hpp:45:18:virtual void touchgfx::Widget::getLastChild(int16_t, int16_t, touchgfx::Drawable**)	3
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:708:6:void Screen1View::playSound(uint8_t, uint16_t)	1
 ../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:343:10:void touchgfx::Drawable::setXY(int16_t, int16_t)	1
 ../../Middlewares/ST/touchgfx/framework/include/touchgfx/Drawable.hpp:413:10:void touchgfx::Drawable::setWidthHeight(int16_t, int16_t)	1
 ../../Middlewares/ST/touchgfx/framework/include/touchgfx/widgets/Box.hpp:33:5:touchgfx::Box::Box()	1
-../../TouchGFX/gui/include/gui/screen1_screen/Screen1View.hpp:88:10:bool Screen1View::checkCollision(int8_t, int8_t)	6
-../../TouchGFX/gui/include/gui/screen1_screen/Screen1View.hpp:115:10:void Screen1View::updateBoardDisplay()	4
-../../TouchGFX/gui/include/gui/screen1_screen/Screen1View.hpp:222:10:void Screen1View::updateScoreDisplay()	2
-../../TouchGFX/gui/include/gui/screen1_screen/Screen1View.hpp:235:10:void Screen1View::updateNextPieceDisplay()	5
-../../TouchGFX/gui/include/gui/screen1_screen/Screen1View.hpp:366:10:void Screen1View::updateCurrentTetrominoUI()	9
-../../TouchGFX/gui/include/gui/screen1_screen/Screen1View.hpp:138:10:void Screen1View::updateTetrominoDisplay()	2
-../../TouchGFX/gui/include/gui/screen1_screen/Screen1View.hpp:269:10:void Screen1View::resetGame()	6
-C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:89:6:virtual void Screen1View::buttonClicked()	2
-../../TouchGFX/gui/include/gui/screen1_screen/Screen1View.hpp:148:10:void Screen1View::handleControlInput()	15
-C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:100:6:virtual void Screen1View::handleTickEvent()	16
-C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:4:1:Screen1View::Screen1View()	6
-C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:78:6:virtual void Screen1View::setupScreen()	1
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:290:6:void Screen1View::startLineClearEffect(int*, int)	3
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:366:6:void Screen1View::startGameOverEffect()	4
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:408:6:void Screen1View::highlightScore()	1
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:416:6:void Screen1View::updateScoreHighlight()	2
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:460:6:void Screen1View::updateNextPieceDisplay()	5
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:558:6:void Screen1View::updateBoardDisplay()	4
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:307:6:void Screen1View::updateLineClearEffect()	7
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:383:6:void Screen1View::updateGameOverEffect()	5
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:591:6:bool Screen1View::checkCollision(int8_t, int8_t)	6
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:647:6:void Screen1View::updateCurrentTetrominoUI()	9
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:581:6:void Screen1View::updateTetrominoDisplay()	2
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:605:6:void Screen1View::rotatePiece()	6
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:678:6:void Screen1View::readHighScoreFromFlash()	1
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:687:6:void Screen1View::writeHighScoreToFlash(uint32_t)	3
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:708:6:void Screen1View::playSound(uint8_t, uint16_t)	1
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:714:6:void Screen1View::stopSound()	1
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:720:6:void Screen1View::playMoveSound()	1
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:725:6:void Screen1View::playRotateSound()	1
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:730:6:void Screen1View::playDropSound()	1
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:235:6:void Screen1View::placePiece()	4
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:735:6:void Screen1View::playLineClearSound()	1
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:744:6:void Screen1View::playGameOverSound()	1
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:427:6:void Screen1View::updateScoreDisplay()	4
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:494:6:void Screen1View::resetGame()	7
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:97:6:virtual void Screen1View::buttonClicked()	2
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:755:6:void Screen1View::playLevelUpSound()	1
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:249:5:int Screen1View::checkAndClearLines()	6
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:766:6:void Screen1View::playFastDropSound()	1
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:189:6:void Screen1View::handleControlInput()	12
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:771:6:void Screen1View::playBackgroundMusic()	4
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:108:6:virtual void Screen1View::handleTickEvent()	13
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:789:6:void Screen1View::toggleBackgroundMusic()	2
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:15:1:Screen1View::Screen1View()	6
+C:/TouchGFXProjects/TetrisGame/TouchGFX/gui/src/screen1_screen/Screen1View.cpp:84:6:virtual void Screen1View::setupScreen()	1

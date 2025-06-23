@@ -185,16 +185,16 @@
       <UniqueIdentifier>7E004FFA-CC0C-858E-3982-D2C658EBC15C</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\gui\screen0_screen">
-      <UniqueIdentifier>67D0625E-078E-73D2-2891-0E9C86E93B4F</UniqueIdentifier>
+      <UniqueIdentifier>A797B672-0268-2113-26F2-B701CCD391FA</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\gui\screen0_screen">
-      <UniqueIdentifier>FCFB2F1D-8664-1678-7D30-E0F843969185</UniqueIdentifier>
+      <UniqueIdentifier>8281F352-1B84-C359-2B3B-1BF25344A545</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\generated\gui_generated\screen0_screen">
-      <UniqueIdentifier>0E5B78BA-DF56-9565-4D92-74C39E2D4DF3</UniqueIdentifier>
+      <UniqueIdentifier>7B4F2F74-7D4C-68B7-EA3E-125BA0FD2DBF</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\generated\gui_generated\screen0_screen">
-      <UniqueIdentifier>2EB4E267-D4DC-D0D7-6AD9-285145D73C57</UniqueIdentifier>
+      <UniqueIdentifier>DD1484EA-E072-2549-C800-2DE13B55EE3E</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
